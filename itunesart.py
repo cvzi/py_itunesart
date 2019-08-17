@@ -4,7 +4,7 @@ import json
 
 __all__ = ["findAlbumArt"]
 
-__version__ = "1.0"
+__version__ = "1.1"
 
 def __getArt(search, entity, country):
     #url = 'http://ax.itunes.apple.com/WebObjects/MZStoreServices.woa/wa/wsSearch?term=%s&country=%s&entity=%s' % (urllib.parse.quote(search), urllib.parse.quote(country), urllib.parse.quote(entity))
