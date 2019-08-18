@@ -28,6 +28,8 @@ def main(args):
 
   # Search on iTunes
   albuminfo, guess = getSongInfoString(oldmetadata)
+  if not albuminfo.strip():
+    albuminfo = os.path.basename(mp3)
 
   selectedSong = None
   print("")
@@ -50,7 +52,9 @@ def main(args):
     print('')
     print('[q]/[0] to exit')
     print('')
+
     print('Current metadata:\n  \t%s' % albuminfo)
+    print('Search results (%d results):\n' % len(songs))
     for i, song in enumerate(songs):
       print("%02d\t%s - %s\n  \t(%s - %s) (%d/%d)\n" % (i + 1, song['artist'], song['name'], song['albumArtist'], song['album'], song['track'], song['totalTracks']))
 

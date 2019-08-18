@@ -232,10 +232,7 @@ def getSongInfoString(metadata):
     if "TRCK" in metadata and metadata["TRCK"]:
         trck = metadata["TRCK"].split("/")[1]
         albuminfo += " (#%s)" % str(metadata["TRCK"])
-        
 
-    else:
-        albuminfo += " (%d files)" % len(mp3s)
     return albuminfo, guess
 
 def getTrackInfoString(metadata):
@@ -246,7 +243,7 @@ def getTrackInfoString(metadata):
         else:
             trackinfo += "(%2s/ ?) " % metadata["TRCK"]
     else:
-        trackinfo += "( ?/? ) " % metadata["TRCK"]
+        trackinfo += "( ?/? ) "
 
     if "TPE1" in metadata and metadata["TPE1"]:
         trackinfo += metadata["TPE1"]
@@ -257,6 +254,10 @@ def getTrackInfoString(metadata):
 
     if "TIT2" in metadata and metadata["TIT2"]:
         trackinfo += " - %s" % metadata["TIT2"]
+
+    if trackinfo.strip() == '( ?/? )':
+        # empty data
+        trackinfo = ""
 
     return trackinfo
 
@@ -340,6 +341,8 @@ def main(args):
         # Compare tracks with itunes
         for i, name in enumerate(mp3s):
             trackinfo = getTrackInfoString(getStuff(name, loud=False))
+            if not trackinfo:
+                trackinfo = os.path.basename(name)
             print("File:   %s" % trackinfo)
             print(
                 "iTunes: (%02d/%02d) %s - %s" %
