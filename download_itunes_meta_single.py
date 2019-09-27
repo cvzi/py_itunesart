@@ -10,7 +10,7 @@ from download_itunes_meta import getSongInfoString, iTunesFindSong, setStuff, ge
 
 
 
-__version__ = "1.0"
+__version__ = "1.1"
 
 def main(args):
   if args.write:
@@ -36,6 +36,9 @@ def main(args):
   print("Search song on iTunes        [q] to exit")
   while selectedSong is None:
     guess = guess.strip()
+    if not guess:
+        guess = os.path.splitext(os.path.basename(mp3))[0]
+
     query = input("['%s']=" % guess)
     if not query:
         query = guess

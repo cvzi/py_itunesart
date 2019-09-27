@@ -12,7 +12,7 @@ from pprint import pprint
 from mutagen.mp3 import MP3
 from mutagen.id3 import ID3, TPE1, TPE2, TPOS, TRCK, APIC, TDRC, TIT2, TCON, TALB
 
-__version__ = "1.0"
+__version__ = "1.1"
 
 
 def __getArt(search, entity, country):
@@ -152,9 +152,19 @@ def setStuff(filename, title=None, artist=None, albumArtist=None, album=None, tr
         audio["TALB"] = TALB(encoding=3, text=album)
 
     if track is not None and totalTracks is not None:
-        audio["TRCK"] = TRCK(
-            encoding=3, text="%02d/%02d" %
-            (int(track), int(totalTracks)))
+        if totalTracks > 99:
+            audio["TRCK"] = TRCK(
+                encoding=3, text="%03d/%03d" %
+                (int(track), int(totalTracks)))
+        elif totalTracks > 9:
+            audio["TRCK"] = TRCK(
+                encoding=3, text="%02d/%02d" %
+                (int(track), int(totalTracks)))
+        else:
+            audio["TRCK"] = TRCK(
+                encoding=3, text="%d/%d" %
+                (int(track), int(totalTracks)))
+
     elif track is not None:
         audio["TRCK"] = TRCK(encoding=3, text="%02d" % int(track))
 
@@ -292,6 +302,9 @@ def main(args):
     print("Search album on iTunes        [q] to exit")
     while selectedAlbum is None:
         guess = guess.strip()
+        if not guess:
+            guess = os.path.basename(os.path.dirname(mp3s[0]))
+
         query = input("['%s']=" % guess)
         if not query:
             query = guess
