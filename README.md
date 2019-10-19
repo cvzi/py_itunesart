@@ -1,7 +1,7 @@
 # py_itunesart
 Download album cover and meta data information from [Apple iTunes API](https://affiliate.itunes.apple.com/resources/documentation/itunes-store-web-service-search-api/).
 
-Metadata and album cover can be stored in mp3 metadata/id3
+Metadata and album cover can be stored in mp3 metadata/id3 and in m4a metadata
 
 Can be used from the command line or from [Mp3Tag](http://www.mp3tag.de)
 
