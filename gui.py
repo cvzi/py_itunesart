@@ -11,10 +11,13 @@ import time
 import tkinter as tk
 import PIL.Image
 import PIL.ImageTk
-import mutagen.mp3
+from mutagen.mp3 import MP3
+from mutagen.mp4 import MP4, MP4Cover
 from mutagen.id3 import APIC
 
-from itunesart import findAlbumArt
+from itunesapi import findAlbumArt
+
+__version__ = "1.2"
 
 
 class Gui(tk.Tk):
@@ -115,7 +118,7 @@ class Gui(tk.Tk):
             label = tk.Label(frame, text=title)
             label.pack(fill=tk.X)
 
-            if not url in Gui._imageRefs:
+            if url not in Gui._imageRefs:
                 Gui._imageRefs[url] = None
 
             button = tk.Button(
@@ -127,10 +130,11 @@ class Gui(tk.Tk):
             button.pack(fill=tk.X)
 
             if Gui._imageRefs[url] is None:
-                t = threading.Thread(target=self._loadImage, args=(button, url))
+                t = threading.Thread(
+                    target=self._loadImage, args=(
+                        button, url))
                 t.daemon = True
                 t.start()
-
 
     def selectedImage(self, result):
         if not self.files:
@@ -138,7 +142,7 @@ class Gui(tk.Tk):
             self.entry.delete(0, 'end')
             self.entry.insert(0, "No files found")
             return
-    
+
         url = result['image'].replace(
             "%dx%dbb.jpg" %
             (self.imageSize, self.imageSize), "%dx%dbb.jpg" %
@@ -148,18 +152,18 @@ class Gui(tk.Tk):
             dirname = os.path.dirname(self.files[0])
             folderjpg = os.path.join(dirname, 'folder.jpg')
             newfolderjpg = os.path.join(dirname, '_newfolder.jpg')
-            
+
             urllib.request.urlretrieve(url, newfolderjpg)
             if os.path.exists(newfolderjpg):
                 try:
                     if os.path.exists(folderjpg):
                         os.remove(folderjpg)
-                except:
+                except BaseException:
                     try:
                         subprocess.check_call(
                             ["attrib", "-H", "-R", folderjpg])
                         os.remove(folderjpg)
-                    except:
+                    except BaseException:
                         os.remove(newfolderjpg)
                 if not os.path.exists(folderjpg):
                     os.rename(newfolderjpg, folderjpg)
@@ -178,24 +182,43 @@ class Gui(tk.Tk):
 
         i = 0
         for filename in self.files:
-            try:
-                audio = mutagen.mp3.MP3(filename)
-            except:
-                print("Could not open file: %s" % str(filename))
-                continue
-            audio.tags.add(
-                APIC(
-                    encoding=3,  # 3 is for utf-8
-                    mime='image/jpeg',  # image/jpeg or image/png
-                    type=3,  # 3 is for the cover image
-                    desc=u'',
-                    data=artwork
+            if filename.lower().endswith('.mp3'):
+                try:
+                    audio = MP3(filename)
+                except BaseException:
+                    print("Could not open file: %s" % str(filename))
+                    continue
+                audio.tags.add(
+                    APIC(
+                        encoding=3,  # 3 is for utf-8
+                        mime='image/jpeg',  # image/jpeg or image/png
+                        type=3,  # 3 is for the cover image
+                        desc=u'',
+                        data=artwork
+                    )
                 )
-            )
-            try:
-                audio.save()
-            except:
-                print("Could not save file: %s" % str(filename))
+                try:
+                    audio.save()
+                except BaseException:
+                    print("Could not save file: %s" % str(filename))
+                    continue
+            elif filename.lower().endswith('.m4a'):
+                try:
+                    audio = MP4(filename)
+                except BaseException:
+                    print("Could not open file: %s" % str(filename))
+                    continue
+                audio["covr"] = [
+                    MP4Cover(
+                        data=artwork,
+                        imageformat=MP4Cover.FORMAT_JPEG)]
+                try:
+                    audio.save()
+                except BaseException:
+                    print("Could not save file: %s" % str(filename))
+                    continue
+            else:
+                print("Wrong file extension. Expected .mp3 or .m4a")
                 continue
 
             i += 1
@@ -244,7 +267,7 @@ def main(args):
         walk = os.walk(dirname)
         for root, dirs, files in walk:
             for name in files:
-                if name.lower().endswith('.mp3'):
+                if name.lower().endswith(('.mp3', '.m4a')):
                     mp3s.append(os.path.join(root, name))
                     print(" *", name)
     else:
@@ -255,21 +278,38 @@ def main(args):
         query = args.query
     else:
         # Read id3 data
-        try:
-            audio = mutagen.mp3.MP3(mp3s[0])
-            query = ""
-            if "TALB" in audio and str(audio["TALB"]):
-                query += " " + str(audio["TALB"])
-            elif "TIT2" in audio and str(audio["TIT2"]):
-                query += " " + str(audio["TIT2"])
-            if "TPE2" in audio and str(audio["TPE2"]):
-                query += " " + str(audio["TPE2"])
-            elif "TPE1" in audio and str(audio["TPE1"]):
-                query += " " + str(audio["TPE1"])
-            query = query.strip()
-        except e:
-            print("Could not read ID3 data:")
-            print(e)
+        if mp3s[0].lower().endswith('.mp3'):
+            try:
+                audio = MP3(mp3s[0])
+                if "TALB" in audio and str(audio["TALB"]):
+                    query += " " + str(audio["TALB"])
+                elif "TIT2" in audio and str(audio["TIT2"]):
+                    query += " " + str(audio["TIT2"])
+                if "TPE2" in audio and str(audio["TPE2"]):
+                    query += " " + str(audio["TPE2"])
+                elif "TPE1" in audio and str(audio["TPE1"]):
+                    query += " " + str(audio["TPE1"])
+                query = query.strip()
+            except e:
+                print("Could not read ID3 data:")
+                print(e)
+        elif mp3s[0].lower().endswith('.m4a'):
+            try:
+                audio = MP4(mp3s[0])
+                if "\xa9alb" in audio and audio["\xa9alb"] and audio["\xa9alb"][0]:
+                    query += " " + str(audio["\xa9alb"][0])
+                elif "\xa9nam" in audio and audio["\xa9nam"] and audio["\xa9nam"][0]:
+                    query += " " + str(audio["\xa9nam"][0])
+                if "aART" in audio and audio["aART"] and audio["aART"][0]:
+                    query += " " + str(audio["aART"][0])
+                elif "\xa9ART" in audio and audio["\xa9ART"] and audio["\xa9ART"][0]:
+                    query += " " + str(audio["\xa9ART"][0])
+                query = query.strip()
+            except e:
+                print("Could not read ID3 data:")
+                print(e)
+        else:
+            print("Wrong file extension. Expected .mp3 or .m4a")
 
     print("Query=%s" % query)
 
