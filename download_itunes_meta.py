@@ -91,20 +91,20 @@ def main(args):
     if len(selectedTracks) != len(mp3s):
         print("!!! Found %d files and %d tracks" %
               (len(mp3s), len(selectedTracks)))
-    else:
-        # Compare tracks with itunes
-        for i, name in enumerate(mp3s):
-            trackinfo = getTrackInfoString(getStuff(name, loud=False))
-            if not trackinfo:
-                trackinfo = os.path.basename(name)
-            print("File:   %s" % trackinfo)
-            print(
-                "iTunes: (%02d/%02d) %s - %s" %
-                (selectedTracks[i]['track'],
-                 selectedAlbum['totalTracks'],
-                 selectedTracks[i]['artist'],
-                 selectedTracks[i]['name']))
-            print("")
+
+    # Compare tracks with itunes
+    for i, name in enumerate(mp3s[0:min(len(mp3s), len(selectedTracks))]):
+        trackinfo = getTrackInfoString(getStuff(name, loud=False))
+        if not trackinfo:
+            trackinfo = os.path.basename(name)
+        print("File:   %s" % trackinfo)
+        print(
+            "iTunes: (%02d/%02d) %s - %s" %
+            (selectedTracks[i]['track'],
+             selectedAlbum['totalTracks'],
+             selectedTracks[i]['artist'],
+             selectedTracks[i]['name']))
+        print("")
 
     # Try to read folder.jpg
     if args.write:
