@@ -242,7 +242,7 @@ def setStuff_m4a(
 
 
 def getAlbumInfoString(metadata, mp3s):
-    if metadata['type'] is 'mp3':
+    if metadata['type'] == 'mp3':
         return getAlbumInfoString_mp3(metadata, mp3s)
     else:
         return getAlbumInfoString_m4a(metadata, mp3s)
@@ -309,7 +309,7 @@ def getAlbumInfoString_m4a(metadata, mp3s):
 
 
 def getSongInfoString(metadata):
-    if metadata['type'] is 'mp3':
+    if metadata['type'] == 'mp3':
         return getSongInfoString_mp3(metadata)
     else:
         return getSongInfoString_m4a(metadata)
@@ -365,7 +365,7 @@ def getSongInfoString_m4a(metadata):
 
 
 def getTrackInfoString(metadata):
-    if metadata['type'] is 'mp3':
+    if metadata['type'] == 'mp3':
         return getTrackInfoString_mp3(metadata)
     else:
         return getTrackInfoString_m4a(metadata)
