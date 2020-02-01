@@ -10,7 +10,7 @@ from pprint import pprint
 from fileutils import asciiString, getStuff, setStuff, getAlbumInfoString, getSongInfoString, getTrackInfoString
 from itunesapi import iTunesGetTracks, iTunesFindSong, iTunesFindAlbum
 
-__version__ = "1.2"
+__version__ = "1.3"
 
 
 def main(args):
@@ -18,6 +18,8 @@ def main(args):
         print("++++Writing Mode++++")
     else:
         print("++++Read-only Mode++++")
+
+    country = 'us'
 
     # Walk files
     mp3s = []
@@ -54,13 +56,13 @@ def main(args):
             print("No search string provided")
             return
 
-        albums = iTunesFindAlbum(query)
+        albums = iTunesFindAlbum(query, country=country)
         if len(albums) == 0:
             print("No results, try again or quit with [q]")
             continue
 
         print('')
-        print('[q]/[0] to exit')
+        print('[q]/[0] to exit [L] to change country (%s)' % country)
         print('')
         print('Current metadata:\t%s' % albuminfo)
         for i, album in enumerate(albums):
@@ -72,17 +74,26 @@ def main(args):
             val = input('Select your album: ')
             if val == 'q' or val == '0':
                 return
-            try:
-                val = int(val)
-                assert val > 0
-                assert val <= len(albums)
+            elif val == 'L' or val == 'l':
+                val = input('Type two-letter code: (e.g. US) ')
+                if len(val) != 2:
+                    print("Invalid code, using default: US")
+                    country = 'us'
+                else:
+                    print("Country changed. Search again:")
+                    country = val
                 break
-            except ValueError:
-                print("Sorry, wrong Number!")
-            except AssertionError:
-                print("Wtf?!")
-
-        selectedAlbum = albums[val - 1]
+            else:
+                try:
+                    val = int(val)
+                    assert val > 0
+                    assert val <= len(albums)
+                    selectedAlbum = albums[val - 1]
+                    break
+                except ValueError:
+                    print("Sorry, wrong Number!")
+                except AssertionError:
+                    print("Wtf?!")
 
     print("Downloading data...")
     # Download selected album data from itunes

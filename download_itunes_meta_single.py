@@ -9,7 +9,7 @@ from pprint import pprint
 from fileutils import asciiString, getStuff, setStuff, getSongInfoString
 from itunesapi import iTunesFindSong
 
-__version__ = "1.2"
+__version__ = "1.3"
 
 
 def main(args):
@@ -17,6 +17,8 @@ def main(args):
         print("++++Writing Mode++++")
     else:
         print("++++Read-only Mode++++")
+
+    country = 'us'
 
     # Walk files
     mp3 = os.path.abspath(args.filename)
@@ -46,25 +48,25 @@ def main(args):
             print("No search string provided")
             return
 
-        songs = iTunesFindSong(query)
+        songs = iTunesFindSong(query, country=country)
         if len(songs) == 0:
             print("No results, try again or quit with [q]")
             continue
 
         print('')
-        print('[q]/[0] to exit')
+        print('[q]/[0] to exit [L] to change country (%s)' % country)
         print('')
 
         print('Current metadata:\n  \t%s' % albuminfo)
         print('Search results (%d results):\n' % len(songs))
         for i, song in enumerate(songs):
             print(
-                "%02d\t%s - %s\n  \t(%s - %s) (%d/%d)\n" %
+                "%02d\t%s - %s\n  \t(%s%s) (%d/%d)\n" %
                 (i +
                  1,
                  song['artist'],
                     song['name'],
-                    song['albumArtist'],
+                    (song['albumArtist'] + ' - ') if song['albumArtist'] else '',
                     song['album'],
                     song['track'],
                     song['totalTracks']))
@@ -73,17 +75,27 @@ def main(args):
             val = input('Select your song: ')
             if val == 'q' or val == '0':
                 return
-            try:
-                val = int(val)
-                assert val > 0
-                assert val <= len(songs)
-                break
-            except ValueError:
-                print("Sorry, wrong Number!")
-            except AssertionError:
-                print("Wtf?!")
 
-        selectedSong = songs[val - 1]
+            elif val == 'L' or val == 'l':
+                val = input('Type two-letter code: (e.g. US) ')
+                if len(val) != 2:
+                    print("Invalid code, using default: US")
+                    country = 'us'
+                else:
+                    print("Country changed. Search again:")
+                    country = val
+                break
+            else:
+                try:
+                    val = int(val)
+                    assert val > 0
+                    assert val <= len(songs)
+                    selectedSong = songs[val - 1]
+                    break
+                except ValueError:
+                    print("Sorry, wrong Number!")
+                except AssertionError:
+                    print("Wtf?!")
 
     artwork = False
     if args.write:

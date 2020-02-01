@@ -11,7 +11,7 @@ __all__ = [
     "getSongInfoString",
     "getTrackInfoString"]
 
-__version__ = "1.2"
+__version__ = "1.3"
 
 
 def asciiString(s):
@@ -375,9 +375,15 @@ def getTrackInfoString_mp3(metadata):
     trackinfo = ""
     if "TRCK" in metadata and metadata["TRCK"]:
         if "/" in metadata["TRCK"]:
-            trackinfo += "(%2s/%2s) " % tuple(metadata["TRCK"].split("/"))
+            try:
+                trackinfo += "(%02d/%02d) " % tuple(int(x) for x in metadata["TRCK"].split("/"))
+            except ValueError:
+                trackinfo += "(%2s/%2s) " % tuple(metadata["TRCK"].split("/"))
         else:
-            trackinfo += "(%2s/ ?) " % metadata["TRCK"]
+            try:
+                trackinfo += "(%02d/ ?) " % (int(metadata["TRCK"]), )
+            except ValueError:
+                trackinfo += "(%2s/ ?) " % (metadata["TRCK"], )
     else:
         trackinfo += "( ?/? ) "
 
@@ -402,9 +408,15 @@ def getTrackInfoString_m4a(metadata):
     trackinfo = ""
     if "trkn" in metadata and metadata["trkn"]:
         if isinstance(metadata["trkn"], tuple):
-            trackinfo += "(%2s/%2s) " % metadata["trkn"][0:2]
+            try:
+                trackinfo += "(%02d/%02d) " % tuple(int(x) for x in metadata["trkn"][0:2])
+            except ValueError:
+                trackinfo += "(%2s/%2s) " % metadata["trkn"][0:2]
         else:
-            trackinfo += "(%2s/ ?) " % str(metadata["trkn"])
+            try:
+                trackinfo += "(%02d/ ?) " % (int(metadata["trkn"]), )
+            except ValueError:
+                trackinfo += "(%2s/ ?) " % str(metadata["trkn"])
     else:
         trackinfo += "( ?/? ) "
 

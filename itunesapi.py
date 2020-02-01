@@ -8,7 +8,7 @@ __all__ = [
     "iTunesGetTracks",
     "findAlbumArt"]
 
-__version__ = "1.2"
+__version__ = "1.3"
 
 
 def __getArt(search, entity, country):
@@ -37,8 +37,8 @@ def __getTracks(collectionId):
     return data
 
 
-def iTunesFindAlbum(search, dimensions=(600, 600, 'bb')):
-    data = __getArt(search, "album", "us")
+def iTunesFindAlbum(search, dimensions=(600, 600, 'bb'), country="us"):
+    data = __getArt(search, "album", country)
 
     results = []
 
@@ -59,8 +59,8 @@ def iTunesFindAlbum(search, dimensions=(600, 600, 'bb')):
     return results
 
 
-def iTunesFindSong(search, dimensions=(600, 600, 'bb')):
-    data = __getArt(search, "song", "us")
+def iTunesFindSong(search, dimensions=(600, 600, 'bb'), country="us"):
+    data = __getArt(search, "song", country)
 
     results = []
 
@@ -106,8 +106,8 @@ def iTunesGetTracks(collectionId):
     return results
 
 
-def findAlbumArt(search, dimensions=(600, 600, 'bb')):
-    data = __getArt(search, "album", "us")
+def findAlbumArt(search, dimensions=(600, 600, 'bb'), country="us"):
+    data = __getArt(search, "album", country)
 
     results = []
 
