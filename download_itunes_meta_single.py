@@ -9,7 +9,7 @@ from pprint import pprint
 from fileutils import asciiString, getStuff, setStuff, getSongInfoString
 from itunesapi import iTunesFindSong
 
-__version__ = "1.3"
+__version__ = "1.4"
 
 
 def main(args):
@@ -34,7 +34,7 @@ def main(args):
 
     selectedSong = None
     print("")
-    print("Search song on iTunes        [q] to exit")
+    print('Search song on iTunes        [q] to exit, [L] to change country (%s)' % country)
     while selectedSong is None:
         guess = guess.strip()
         if not guess:
@@ -47,6 +47,15 @@ def main(args):
         if not query or query == 'q':
             print("No search string provided")
             return
+        if query == 'L' or query == 'l':
+            val = input('Type two-letter code: (e.g. US) ')
+            if len(val) != 2:
+                print("Invalid code, using default: US")
+                country = 'us'
+            else:
+                print("Country changed. Search again:")
+                country = val
+            continue
 
         songs = iTunesFindSong(query, country=country)
         if len(songs) == 0:
