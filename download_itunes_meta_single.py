@@ -144,10 +144,11 @@ def main(args):
                   asciiString(str(metadata[attr])[:50],
                               "... ... ..." if len(str(metadata[attr])) > 49 else ""))
 
-    if not args.write:
-        time.sleep(15)
-    else:
-        time.sleep(5)
+    if args.sleep:
+        if not args.write:
+            time.sleep(15)
+        else:
+            time.sleep(5)
 
 
 if __name__ == "__main__":
@@ -168,6 +169,13 @@ if __name__ == "__main__":
         const=True,
         default=False,
         help='Delete all existing metadata before adding new metadata')
+    parser.add_argument(
+        '-s',
+        dest='sleep',
+        action='store_const',
+        const=True,
+        default=False,
+        help='Sleep 5 seconds at the end of the script to keep the console window open on Windows')
     parser.add_argument('filename', help='A mp3 file')
     args = parser.parse_args()
 

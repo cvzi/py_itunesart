@@ -108,6 +108,13 @@ def main(args):
     # Download selected album data from itunes
     selectedTracks = iTunesGetTracks(selectedAlbum["collectionId"])
     print("")
+    if len(selectedTracks) != selectedAlbum['totalTracks']:
+        print("!!! Expected %d tracks in album but iTunes API provided %d tracks" % (selectedAlbum['totalTracks'], len(selectedTracks)))
+    if len(selectedTracks) == 0:
+        if args.sleep:
+            time.sleep(10)
+        print("Aborting.")
+        return
     if len(selectedTracks) != len(mp3s):
         print("!!! Found %d files and %d tracks" %
               (len(mp3s), len(selectedTracks)))
@@ -227,10 +234,11 @@ def main(args):
                 print(s)
                 fs.write(s)
 
-    if not args.write:
-        time.sleep(15)
-    else:
-        time.sleep(5)
+    if args.sleep:
+        if not args.write:
+            time.sleep(15)
+        else:
+            time.sleep(5)
 
 
 if __name__ == "__main__":
@@ -258,7 +266,13 @@ if __name__ == "__main__":
         const=True,
         default=False,
         help='Delete all existing metadata before adding new metadata')
-
+    parser.add_argument(
+        '-s',
+        dest='sleep',
+        action='store_const',
+        const=True,
+        default=False,
+        help='Sleep 5 seconds at the end of the script to keep the console window open on Windows')
     args = parser.parse_args()
 
     main(args)

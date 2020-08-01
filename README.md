@@ -20,7 +20,7 @@ To add it to the Mp3Tag context menu, do the following steps in Mp3Tag:
  * Click on the "New" icon
  * Enter the name that shall appear in the context menu
  * For path choose your python.exe
- * For parameter use: `C:\pathtofile\download_itunes_meta_single.py -c -w "%_path%"`
+ * For parameter use: `C:\pathtofile\download_itunes_meta_single.py -c -w -s "%_path%"`
  * Accept the "for all selected files" option
 
 ## Metadata from iTunes (Album/Folder)
@@ -28,7 +28,7 @@ To add it to the Mp3Tag context menu, do the following steps in Mp3Tag:
  * Click on the "New" icon
  * Enter the name that shall appear in the context menu
  * For path choose your python.exe
- * For parameter use: `C:\pathtofile\download_itunes_meta.py -c -w`
+ * For parameter use: `C:\pathtofile\download_itunes_meta.py -c -w -s`
  * Uncheck the "for all selected files" option
 
 ## Only cover from iTunes (Single song)
