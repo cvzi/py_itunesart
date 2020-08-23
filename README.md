@@ -9,11 +9,13 @@ Requirements:
  * Python 3
  * [Mutagen](https://bitbucket.org/lazka/mutagen) python module `pip install mutagen`
 
+![Animated screenshot of terminal](screenshots/screencapture_itunes_meta.gif)
+
 # Mp3Tag
 
 To add it to the Mp3Tag context menu, do the following steps in Mp3Tag:
 
-![Mp3Tag instructions](https://raw.githubusercontent.com/cvzi/py_itunesart/master/mp3tag.jpg)
+![Mp3Tag instructions](screenshots/mp3tag.jpg)
 
 ## Metadata from iTunes (Single song)
  * Open Tools -> Options -> Tools
@@ -51,4 +53,4 @@ To add it to the Mp3Tag context menu, do the following steps in Mp3Tag:
 # GUI
 tkinter GUI screenshot:
 
-![Artwork GUI](https://raw.githubusercontent.com/cvzi/py_itunesart/master/gui.jpg)
+![Artwork GUI](screenshots/gui.jpg)
