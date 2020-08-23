@@ -4,17 +4,18 @@ import argparse
 import time
 import urllib.request
 
-from pprint import pprint
-
-from fileutils import asciiString, getStuff, setStuff, getSongInfoString
+from fileutils import asciiString, getStuff, setStuff, getSongInfoString, getBasicTrackData
 from itunesapi import iTunesFindSong
+from download_itunes_meta import initColor, colorize, cprint, Color, highlightMatch
 
-__version__ = "1.4"
+__version__ = "1.5"
 
 
 def main(args):
+    initColor(args.color)
+
     if args.write:
-        print("++++Writing Mode++++")
+        cprint("++++Writing Mode++++", Color.red, args.color)
     else:
         print("++++Read-only Mode++++")
 
@@ -28,9 +29,10 @@ def main(args):
     print(" * ", os.path.basename(mp3))
 
     # Search on iTunes
-    albuminfo, guess = getSongInfoString(oldmetadata)
-    if not albuminfo.strip():
-        albuminfo = os.path.basename(mp3)
+    songinfo, guess = getSongInfoString(oldmetadata)
+    if not songinfo.strip():
+        songinfo = os.path.basename(mp3)
+    trackdata = getBasicTrackData(oldmetadata)
 
     selectedSong = None
     print("")
@@ -66,19 +68,20 @@ def main(args):
         print('[q]/[0] to exit [L] to change country (%s)' % country)
         print('')
 
-        print('Current metadata:\n  \t%s' % albuminfo)
+        print('Current metadata:\n  \t%s' % colorize(songinfo, color=Color.green, enabled=args.color))
         print('Search results (%d results):\n' % len(songs))
         for i, song in enumerate(songs):
+            trackColored = colorize("%d" % song['track'], color=Color.greenBG, enabled=args.color) if song['track'] == trackdata['track'] else "%d" % song['track']
+            totalTracksColored = colorize("%d" % song['totalTracks'], color=Color.greenBG, enabled=args.color) if song['totalTracks'] == trackdata['totalTracks'] else "%d" % song['totalTracks']
             print(
-                "%02d\t%s - %s\n  \t(%s%s) (%d/%d)\n" %
-                (i +
-                 1,
-                 song['artist'],
-                    song['name'],
-                    (song['albumArtist'] + ' - ') if song['albumArtist'] else '',
-                    song['album'],
-                    song['track'],
-                    song['totalTracks']))
+                "%02d\t%s - %s\n  \t(%s%s) (%s/%s)\n" %
+                (i + 1,
+                 highlightMatch(trackdata['artist'], song['artist'], enabled=args.color),
+                 highlightMatch(trackdata['title'], song['name'], enabled=args.color),
+                 (highlightMatch(trackdata['albumArtist'], song['albumArtist'], enabled=args.color) + ' - ') if song['albumArtist'] else '',
+                 highlightMatch(trackdata['album'], song['album'], enabled=args.color),
+                 trackColored,
+                 totalTracksColored))
 
         while True:
             val = input('Select your song: ')
@@ -176,6 +179,13 @@ if __name__ == "__main__":
         const=True,
         default=False,
         help='Sleep 5 seconds at the end of the script to keep the console window open on Windows')
+    parser.add_argument(
+        '--no-color',
+        dest='color',
+        action='store_const',
+        const=False,
+        default=True,
+        help='Do not use colored text in output')
     parser.add_argument('filename', help='A mp3 file')
     args = parser.parse_args()
 

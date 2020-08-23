@@ -9,13 +9,23 @@ __all__ = [
     "setStuff",
     "getAlbumInfoString",
     "getSongInfoString",
-    "getTrackInfoString"]
+    "getTrackInfoString",
+    "getBasicTrackData",
+    "getBasicAlbumData"]
 
-__version__ = "1.4"
+__version__ = "1.5"
 
 
 def asciiString(s):
     return "".join(filter(lambda x: x in string.printable, s))
+
+
+def valueOrEmpty(metadata, key, key2=False):
+    if key in metadata and metadata[key]:
+      return str(metadata[key])
+    if key2 and key2 in metadata and metadata[key2]:
+      return str(metadata[key2])
+    return ""
 
 
 def getStuff(filename, loud=True):
@@ -435,3 +445,104 @@ def getTrackInfoString_m4a(metadata):
         trackinfo = ""
 
     return trackinfo
+
+
+def getBasicTrackData(metadata):
+    if metadata['type'] == 'mp3':
+        return getBasicTrackData_mp3(metadata)
+    else:
+        return getBasicTrackData_m4a(metadata)
+
+
+def getBasicTrackData_mp3(metadata):
+    track = -1
+    totalTracks = -1
+    if "TRCK" in metadata and metadata["TRCK"]:
+        if "/" in metadata["TRCK"]:
+            try:
+                trackSplit = [int(x) for x in metadata["TRCK"].split("/")]
+                track = trackSplit[0]
+                totalTracks = trackSplit[1]
+            except (ValueError, IndexError) as e:
+                pass
+        else:
+            try:
+                track =  int(metadata["TRCK"])
+            except ValueError:
+                pass
+
+    return {
+      'album' : valueOrEmpty(metadata, 'TALB'),
+      'artist' : valueOrEmpty(metadata, 'TPE1', 'TPE2'),
+      'albumArtist' : valueOrEmpty(metadata, 'TPE2', 'TPE1'),
+      'title' : valueOrEmpty(metadata, 'TIT2'),
+      'track' : track,
+      'totalTracks' : totalTracks
+    }
+
+
+def getBasicTrackData_m4a(metadata):
+    track = -1
+    totalTracks = -1
+    if "trkn" in metadata and metadata["trkn"]:
+        if isinstance(metadata["trkn"], tuple):
+            try:
+                track = int(metadata["trkn"][0])
+                totalTracks = int(metadata["trkn"][1])
+            except (ValueError, IndexError) as e:
+                pass
+        else:
+            try:
+                track = int(metadata["trkn"])
+            except ValueError:
+                pass
+
+    return {
+      'album' : valueOrEmpty(metadata, '\xa9alb'),
+      'artist' : valueOrEmpty(metadata, '\xa9ART', 'aART'),
+      'albumArtist' : valueOrEmpty(metadata, 'aART', '\xa9ART'),
+      'title' : valueOrEmpty(metadata, '\xa9nam'),
+      'track' : track,
+      'totalTracks' : totalTracks
+    }
+
+
+def getBasicAlbumData(metadata):
+    if metadata['type'] == 'mp3':
+        return getBasicAlbumData_mp3(metadata)
+    else:
+        return getBasicAlbumData_m4a(metadata)
+
+
+def getBasicAlbumData_mp3(metadata):
+    trck = -1
+    if "TRCK" in metadata and metadata["TRCK"] and "/" in metadata["TRCK"]:
+        trck = metadata["TRCK"].split("/")[1]
+        try:
+            trck = int(trck)
+        except BaseException:
+            trck = len(mp3s)
+
+    return {
+      'name' : valueOrEmpty(metadata, 'TALB'),
+      'artist' : valueOrEmpty(metadata, 'TPE2', 'TPE1'),
+      'totalTracks' : trck,
+    }
+
+
+def getBasicAlbumData_m4a(metadata):
+    trck = -1
+    if "trkn" in metadata and isinstance(
+            metadata["trkn"], tuple) and len(
+            metadata["trkn"]) > 1:
+        trck = metadata["trkn"]
+        try:
+            trck = int(trck[1])
+        except BaseException:
+            trck = len(mp3s)
+
+    return {
+      'name' : valueOrEmpty(metadata, '\xa9alb'),
+      'artist' : valueOrEmpty(metadata, 'aART', '\xa9ART'),
+      'totalTracks' : trck
+    }

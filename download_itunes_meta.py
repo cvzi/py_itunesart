@@ -4,18 +4,61 @@ import subprocess
 import urllib.request
 import argparse
 import time
+import re
+import platform
+import ctypes
 
-from pprint import pprint
-
-from fileutils import asciiString, getStuff, setStuff, getAlbumInfoString, getSongInfoString, getTrackInfoString
+from fileutils import asciiString, getStuff, setStuff, getAlbumInfoString, getSongInfoString, getTrackInfoString, getBasicAlbumData
 from itunesapi import iTunesGetTracks, iTunesFindSong, iTunesFindAlbum
 
-__version__ = "1.4"
+__version__ = "1.5"
 
+_colorEnd = '\033[0m'
+class Color:
+  green = '\033[92m'
+  greenBG = '\033[42m'
+  red = '\033[91m'
+  redBG = '\033[41m'
+
+def colorize(s, color, enabled=True):
+    if not enabled:
+        return s
+    return f"{color}{s}{_colorEnd}"
+
+def cprint(s, color, enabled=True):
+    print(colorize(s, color, enabled))
+
+def highlightMatch(a, b, color=Color.greenBG, flags=re.IGNORECASE, enabled=True):
+    if not enabled:
+        return b
+    if not a or not b:
+        return b
+    splits = [fr"\b{re.escape(x)}\b" for x in re.split(r'(\W)', a)]
+    def repl(m):
+        if len(m[0]) < 2 and not m[0].isalnum():
+            return m[0]
+        return colorize(m[0], color=color)
+    s = re.sub("|".join(splits), repl, b, flags=flags)
+    s = re.sub(fr"{re.escape(_colorEnd)}(\W+){re.escape(color)}", lambda m: m[1], s)
+    s = re.sub(fr"{re.escape(color)}(.){re.escape(_colorEnd)}", lambda m: m[1], s)
+    return s
+
+def initColor(enabled=True):
+    if enabled and platform.system() == 'Windows':
+        # Enable VT100 sequences "Console Virtual Terminal Sequences" for colored font/background in the Windows terminal
+        # https://docs.microsoft.com/en-us/windows/console/console-virtual-terminal-sequences#example-of-sgr-terminal-sequences
+        kernel32 = ctypes.WinDLL('kernel32')
+        stdOut = kernel32.GetStdHandle(-11)
+        consoleMode = ctypes.c_ulong()
+        kernel32.GetConsoleMode(stdOut, ctypes.byref(consoleMode))
+        consoleMode.value |= 4
+        kernel32.SetConsoleMode(stdOut, consoleMode)
 
 def main(args):
+    initColor(args.color)
+
     if args.write:
-        print("++++Writing Mode++++")
+        cprint("++++Writing Mode++++", Color.red, args.color)
     else:
         print("++++Read-only Mode++++")
 
@@ -29,6 +72,10 @@ def main(args):
             if name.lower().endswith(('.mp3', '.m4a')):
                 mp3s.append(os.path.join(root, name))
 
+    if len(mp3s) == 0:
+        cprint("No .mp3 or .m4a files found!", Color.redBG, args.color)
+        return
+
     # Walk mp3s
     i = 1
     for name in mp3s:
@@ -39,6 +86,7 @@ def main(args):
 
     # Search on iTunes
     albuminfo, guess = getAlbumInfoString(oldmetadata, mp3s)
+    albumdata = getBasicAlbumData(oldmetadata)
 
     selectedAlbum = None
     print("")
@@ -73,11 +121,14 @@ def main(args):
         print('')
         print('[q]/[0] to exit [L] to change country (%s)' % country)
         print('')
-        print('Current metadata:\t%s' % albuminfo)
+        print('Current metadata:\t%s' % colorize(albuminfo, color=Color.green, enabled=args.color))
         for i, album in enumerate(albums):
             print(
-                "\t%d\t\t%s - %s (%d tracks)" %
-                (i + 1, album['artist'], album['name'], album['totalTracks']))
+                "\t%d\t\t%s - %s %s" %
+                (i + 1,
+                 highlightMatch(albumdata['artist'], album['artist'], enabled=args.color),
+                 highlightMatch(albumdata['name'], album['name'], enabled=args.color),
+                 colorize("(%d tracks)" % album['totalTracks'], color=Color.greenBG, enabled=args.color) if albumdata['totalTracks'] == album['totalTracks'] else "(%d tracks)" % album['totalTracks']))
 
         while True:
             val = input('Select your album: ')
@@ -109,15 +160,15 @@ def main(args):
     selectedTracks = iTunesGetTracks(selectedAlbum["collectionId"])
     print("")
     if len(selectedTracks) != selectedAlbum['totalTracks']:
-        print("!!! Expected %d tracks in album but iTunes API provided %d tracks" % (selectedAlbum['totalTracks'], len(selectedTracks)))
+        cprint("!!! Expected %d tracks in album but iTunes API provided %d tracks" % (selectedAlbum['totalTracks'], len(selectedTracks)), Color.redBG, args.color)
     if len(selectedTracks) == 0:
+        cprint("Aborting.", Color.redBG, args.color)
         if args.sleep:
             time.sleep(10)
-        print("Aborting.")
         return
     if len(selectedTracks) != len(mp3s):
-        print("!!! Found %d files and %d tracks" %
-              (len(mp3s), len(selectedTracks)))
+        cprint("!!! Found %d files and %d tracks" %
+              (len(mp3s), len(selectedTracks)), Color.redBG, args.color)
 
     # Compare tracks with itunes
     for i, name in enumerate(mp3s[0:min(len(mp3s), len(selectedTracks))]):
@@ -145,7 +196,7 @@ def main(args):
     artwork = False
     if os.path.exists('folder.jpg'):
         if args.write:
-                # Replace folder.jpg
+            # Replace folder.jpg
             urllib.request.urlretrieve(
                 selectedAlbum['image'], '_newfolder.jpg')
             if os.path.exists('_newfolder.jpg'):
@@ -273,6 +324,13 @@ if __name__ == "__main__":
         const=True,
         default=False,
         help='Sleep 5 seconds at the end of the script to keep the console window open on Windows')
+    parser.add_argument(
+        '--no-color',
+        dest='color',
+        action='store_const',
+        const=False,
+        default=True,
+        help='Do not use colored text in output')
     args = parser.parse_args()
 
     main(args)

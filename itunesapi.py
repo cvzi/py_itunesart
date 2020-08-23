@@ -8,7 +8,7 @@ __all__ = [
     "iTunesGetTracks",
     "findAlbumArt"]
 
-__version__ = "1.4"
+__version__ = "1.5"
 
 
 def __getArt(search, entity, country):
