@@ -13,7 +13,7 @@ __all__ = [
     "getBasicTrackData",
     "getBasicAlbumData"]
 
-__version__ = "1.5"
+__version__ = "1.6"
 
 
 def asciiString(s):
@@ -22,9 +22,9 @@ def asciiString(s):
 
 def valueOrEmpty(metadata, key, key2=False):
     if key in metadata and metadata[key]:
-      return str(metadata[key])
+        return str(metadata[key])
     if key2 and key2 in metadata and metadata[key2]:
-      return str(metadata[key2])
+        return str(metadata[key2])
     return ""
 
 
@@ -386,7 +386,8 @@ def getTrackInfoString_mp3(metadata):
     if "TRCK" in metadata and metadata["TRCK"]:
         if "/" in metadata["TRCK"]:
             try:
-                trackinfo += "(%02d/%02d) " % tuple(int(x) for x in metadata["TRCK"].split("/"))
+                trackinfo += "(%02d/%02d) " % tuple(int(x)
+                                                    for x in metadata["TRCK"].split("/"))
             except ValueError:
                 trackinfo += "(%2s/%2s) " % tuple(metadata["TRCK"].split("/"))
         else:
@@ -419,7 +420,8 @@ def getTrackInfoString_m4a(metadata):
     if "trkn" in metadata and metadata["trkn"]:
         if isinstance(metadata["trkn"], tuple):
             try:
-                trackinfo += "(%02d/%02d) " % tuple(int(x) for x in metadata["trkn"][0:2])
+                trackinfo += "(%02d/%02d) " % tuple(int(x)
+                                                    for x in metadata["trkn"][0:2])
             except ValueError:
                 trackinfo += "(%2s/%2s) " % metadata["trkn"][0:2]
         else:
@@ -467,17 +469,17 @@ def getBasicTrackData_mp3(metadata):
                 pass
         else:
             try:
-                track =  int(metadata["TRCK"])
+                track = int(metadata["TRCK"])
             except ValueError:
                 pass
 
     return {
-      'album' : valueOrEmpty(metadata, 'TALB'),
-      'artist' : valueOrEmpty(metadata, 'TPE1', 'TPE2'),
-      'albumArtist' : valueOrEmpty(metadata, 'TPE2', 'TPE1'),
-      'title' : valueOrEmpty(metadata, 'TIT2'),
-      'track' : track,
-      'totalTracks' : totalTracks
+        'album': valueOrEmpty(metadata, 'TALB'),
+        'artist': valueOrEmpty(metadata, 'TPE1', 'TPE2'),
+        'albumArtist': valueOrEmpty(metadata, 'TPE2', 'TPE1'),
+        'title': valueOrEmpty(metadata, 'TIT2'),
+        'track': track,
+        'totalTracks': totalTracks
     }
 
 
@@ -498,12 +500,12 @@ def getBasicTrackData_m4a(metadata):
                 pass
 
     return {
-      'album' : valueOrEmpty(metadata, '\xa9alb'),
-      'artist' : valueOrEmpty(metadata, '\xa9ART', 'aART'),
-      'albumArtist' : valueOrEmpty(metadata, 'aART', '\xa9ART'),
-      'title' : valueOrEmpty(metadata, '\xa9nam'),
-      'track' : track,
-      'totalTracks' : totalTracks
+        'album': valueOrEmpty(metadata, '\xa9alb'),
+        'artist': valueOrEmpty(metadata, '\xa9ART', 'aART'),
+        'albumArtist': valueOrEmpty(metadata, 'aART', '\xa9ART'),
+        'title': valueOrEmpty(metadata, '\xa9nam'),
+        'track': track,
+        'totalTracks': totalTracks
     }
 
 
@@ -524,9 +526,9 @@ def getBasicAlbumData_mp3(metadata):
             trck = len(mp3s)
 
     return {
-      'name' : valueOrEmpty(metadata, 'TALB'),
-      'artist' : valueOrEmpty(metadata, 'TPE2', 'TPE1'),
-      'totalTracks' : trck,
+        'name': valueOrEmpty(metadata, 'TALB'),
+        'artist': valueOrEmpty(metadata, 'TPE2', 'TPE1'),
+        'totalTracks': trck,
     }
 
 
@@ -542,7 +544,7 @@ def getBasicAlbumData_m4a(metadata):
             trck = len(mp3s)
 
     return {
-      'name' : valueOrEmpty(metadata, '\xa9alb'),
-      'artist' : valueOrEmpty(metadata, 'aART', '\xa9ART'),
-      'totalTracks' : trck
+        'name': valueOrEmpty(metadata, '\xa9alb'),
+        'artist': valueOrEmpty(metadata, 'aART', '\xa9ART'),
+        'totalTracks': trck
     }

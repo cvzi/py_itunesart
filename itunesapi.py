@@ -8,7 +8,7 @@ __all__ = [
     "iTunesGetTracks",
     "findAlbumArt"]
 
-__version__ = "1.5"
+__version__ = "1.6"
 
 
 def __getArt(search, entity, country):
@@ -24,10 +24,10 @@ def __getArt(search, entity, country):
     return data
 
 
-def __getTracks(collectionId):
+def __getTracks(collectionId, country):
     #url = 'http://ax.itunes.apple.com/WebObjects/MZStoreServices.woa/wa/wsLookup?id=%s&entity=song' % (str(collectionId))
-    url = 'https://itunes.apple.com/lookup?id=%s&entity=song' % (
-        str(collectionId))
+    url = 'https://itunes.apple.com/lookup?id=%s&entity=song&country=%s' % (
+        str(collectionId), str(country))
 
     with urllib.request.urlopen(url) as r:
         data = json.loads(
@@ -87,8 +87,8 @@ def iTunesFindSong(search, dimensions=(600, 600, 'bb'), country="us"):
     return results
 
 
-def iTunesGetTracks(collectionId):
-    data = __getTracks(collectionId)
+def iTunesGetTracks(collectionId, country="us"):
+    data = __getTracks(collectionId, country=country)
 
     results = []
 
@@ -128,3 +128,5 @@ def findAlbumArt(search, dimensions=(600, 600, 'bb'), country="us"):
 if __name__ == '__main__':
     from pprint import pprint
     pprint(findAlbumArt("Damian Marley - Stony Hill"))
+
+    pprint(iTunesGetTracks(1462355433, country="es"))

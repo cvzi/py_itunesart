@@ -11,22 +11,29 @@ import ctypes
 from fileutils import asciiString, getStuff, setStuff, getAlbumInfoString, getSongInfoString, getTrackInfoString, getBasicAlbumData
 from itunesapi import iTunesGetTracks, iTunesFindSong, iTunesFindAlbum
 
-__version__ = "1.5"
+__version__ = "1.6"
 
 _colorEnd = '\033[0m'
+
+
 class Color:
-  green = '\033[92m'
-  greenBG = '\033[42m'
-  red = '\033[91m'
-  redBG = '\033[41m'
+    green = '\033[92m'
+    greenBG = '\033[42m'
+    red = '\033[91m'
+    redBG = '\033[41m'
+    yellow = '\033[93m'
+    yellowBG = '\033[43m'
+
 
 def colorize(s, color, enabled=True):
     if not enabled:
         return s
     return f"{color}{s}{_colorEnd}"
 
+
 def cprint(s, color, enabled=True):
     print(colorize(s, color, enabled))
+
 
 def highlightMatch(a, b, color=Color.greenBG, flags=re.IGNORECASE, enabled=True):
     if not enabled:
@@ -34,14 +41,18 @@ def highlightMatch(a, b, color=Color.greenBG, flags=re.IGNORECASE, enabled=True)
     if not a or not b:
         return b
     splits = [fr"\b{re.escape(x)}\b" for x in re.split(r'(\W)', a)]
+
     def repl(m):
         if len(m[0]) < 2 and not m[0].isalnum():
             return m[0]
         return colorize(m[0], color=color)
     s = re.sub("|".join(splits), repl, b, flags=flags)
-    s = re.sub(fr"{re.escape(_colorEnd)}(\W+){re.escape(color)}", lambda m: m[1], s)
-    s = re.sub(fr"{re.escape(color)}(.){re.escape(_colorEnd)}", lambda m: m[1], s)
+    s = re.sub(fr"{re.escape(_colorEnd)}(\W+){re.escape(color)}",
+               lambda m: m[1], s)
+    s = re.sub(fr"{re.escape(color)}(.){re.escape(_colorEnd)}",
+               lambda m: m[1], s)
     return s
+
 
 def initColor(enabled=True):
     if enabled and platform.system() == 'Windows':
@@ -53,6 +64,7 @@ def initColor(enabled=True):
         kernel32.GetConsoleMode(stdOut, ctypes.byref(consoleMode))
         consoleMode.value |= 4
         kernel32.SetConsoleMode(stdOut, consoleMode)
+
 
 def main(args):
     initColor(args.color)
@@ -90,7 +102,8 @@ def main(args):
 
     selectedAlbum = None
     print("")
-    print('Search album on iTunes        [q] to exit, [L] to change country (%s)' % country)
+    print(
+        'Search album on iTunes        [q] to exit, [L] to change country (%s)' % country)
     while selectedAlbum is None:
         guess = guess.strip()
         if not guess:
@@ -121,13 +134,16 @@ def main(args):
         print('')
         print('[q]/[0] to exit [L] to change country (%s)' % country)
         print('')
-        print('Current metadata:\t%s' % colorize(albuminfo, color=Color.green, enabled=args.color))
+        print('Current metadata:\t%s' % colorize(
+            albuminfo, color=Color.green, enabled=args.color))
         for i, album in enumerate(albums):
             print(
                 "\t%d\t\t%s - %s %s" %
                 (i + 1,
-                 highlightMatch(albumdata['artist'], album['artist'], enabled=args.color),
-                 highlightMatch(albumdata['name'], album['name'], enabled=args.color),
+                 highlightMatch(albumdata['artist'],
+                                album['artist'], enabled=args.color),
+                 highlightMatch(albumdata['name'],
+                                album['name'], enabled=args.color),
                  colorize("(%d tracks)" % album['totalTracks'], color=Color.greenBG, enabled=args.color) if albumdata['totalTracks'] == album['totalTracks'] else "(%d tracks)" % album['totalTracks']))
 
         while True:
@@ -157,10 +173,27 @@ def main(args):
 
     print("Downloading data...")
     # Download selected album data from itunes
-    selectedTracks = iTunesGetTracks(selectedAlbum["collectionId"])
-    print("")
+    selectedTracks = iTunesGetTracks(
+        selectedAlbum["collectionId"], country=country)
+
     if len(selectedTracks) != selectedAlbum['totalTracks']:
-        cprint("!!! Expected %d tracks in album but iTunes API provided %d tracks" % (selectedAlbum['totalTracks'], len(selectedTracks)), Color.redBG, args.color)
+        cprint("!!! Expected %d tracks in album but iTunes API provided %d tracks" % (
+            selectedAlbum['totalTracks'], len(selectedTracks)), Color.redBG, args.color)
+        countries = ["ru", "fr", "jm", "ar", "no", "de", "es"]
+        print("Trying stores in other countries...", end=" ")
+        while len(selectedTracks) != selectedAlbum['totalTracks'] and len(countries):
+            cc = countries.pop()
+            print("[%s]" % cc, end=" ")
+            selectedTracks = iTunesGetTracks(
+                selectedAlbum["collectionId"], country=cc)
+        print("")
+        if len(selectedTracks) == selectedAlbum['totalTracks']:
+            print(colorize("Found %d tracks in [%s] store" % (
+                len(selectedTracks), cc), color=Color.yellowBG, enabled=args.color))
+            country = cc
+        else:
+            print("No success in other countries either")
+
     if len(selectedTracks) == 0:
         cprint("Aborting.", Color.redBG, args.color)
         if args.sleep:
@@ -168,7 +201,7 @@ def main(args):
         return
     if len(selectedTracks) != len(mp3s):
         cprint("!!! Found %d files and %d tracks" %
-              (len(mp3s), len(selectedTracks)), Color.redBG, args.color)
+               (len(mp3s), len(selectedTracks)), Color.redBG, args.color)
 
     # Compare tracks with itunes
     for i, name in enumerate(mp3s[0:min(len(mp3s), len(selectedTracks))]):

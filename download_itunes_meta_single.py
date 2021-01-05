@@ -8,7 +8,7 @@ from fileutils import asciiString, getStuff, setStuff, getSongInfoString, getBas
 from itunesapi import iTunesFindSong
 from download_itunes_meta import initColor, colorize, cprint, Color, highlightMatch
 
-__version__ = "1.5"
+__version__ = "1.6"
 
 
 def main(args):
@@ -36,7 +36,8 @@ def main(args):
 
     selectedSong = None
     print("")
-    print('Search song on iTunes        [q] to exit, [L] to change country (%s)' % country)
+    print(
+        'Search song on iTunes        [q] to exit, [L] to change country (%s)' % country)
     while selectedSong is None:
         guess = guess.strip()
         if not guess:
@@ -68,18 +69,25 @@ def main(args):
         print('[q]/[0] to exit [L] to change country (%s)' % country)
         print('')
 
-        print('Current metadata:\n  \t%s' % colorize(songinfo, color=Color.green, enabled=args.color))
+        print('Current metadata:\n  \t%s' % colorize(
+            songinfo, color=Color.green, enabled=args.color))
         print('Search results (%d results):\n' % len(songs))
         for i, song in enumerate(songs):
-            trackColored = colorize("%d" % song['track'], color=Color.greenBG, enabled=args.color) if song['track'] == trackdata['track'] else "%d" % song['track']
-            totalTracksColored = colorize("%d" % song['totalTracks'], color=Color.greenBG, enabled=args.color) if song['totalTracks'] == trackdata['totalTracks'] else "%d" % song['totalTracks']
+            trackColored = colorize("%d" % song['track'], color=Color.greenBG,
+                                    enabled=args.color) if song['track'] == trackdata['track'] else "%d" % song['track']
+            totalTracksColored = colorize("%d" % song['totalTracks'], color=Color.greenBG,
+                                          enabled=args.color) if song['totalTracks'] == trackdata['totalTracks'] else "%d" % song['totalTracks']
             print(
                 "%02d\t%s - %s\n  \t(%s%s) (%s/%s)\n" %
                 (i + 1,
-                 highlightMatch(trackdata['artist'], song['artist'], enabled=args.color),
-                 highlightMatch(trackdata['title'], song['name'], enabled=args.color),
-                 (highlightMatch(trackdata['albumArtist'], song['albumArtist'], enabled=args.color) + ' - ') if song['albumArtist'] else '',
-                 highlightMatch(trackdata['album'], song['album'], enabled=args.color),
+                 highlightMatch(trackdata['artist'],
+                                song['artist'], enabled=args.color),
+                 highlightMatch(trackdata['title'],
+                                song['name'], enabled=args.color),
+                 (highlightMatch(trackdata['albumArtist'], song['albumArtist'],
+                                 enabled=args.color) + ' - ') if song['albumArtist'] else '',
+                 highlightMatch(trackdata['album'],
+                                song['album'], enabled=args.color),
                  trackColored,
                  totalTracksColored))
 
