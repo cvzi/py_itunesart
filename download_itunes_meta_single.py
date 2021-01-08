@@ -6,9 +6,9 @@ import urllib.request
 
 from fileutils import asciiString, getStuff, setStuff, getSongInfoString, getBasicTrackData
 from itunesapi import iTunesFindSong
-from download_itunes_meta import initColor, colorize, cprint, Color, highlightMatch
+from download_itunes_meta import initColor, colorize, cprint, Color, highlightMatch, try_countries, country_default
 
-__version__ = "1.6"
+__version__ = "1.7"
 
 
 def main(args):
@@ -19,7 +19,7 @@ def main(args):
     else:
         print("++++Read-only Mode++++")
 
-    country = 'us'
+    country = country_default
 
     # Walk files
     mp3 = os.path.abspath(args.filename)
@@ -62,8 +62,20 @@ def main(args):
 
         songs = iTunesFindSong(query, country=country)
         if len(songs) == 0:
-            print("No results, try again or quit with [q]")
-            continue
+            countries = try_countries[:]
+            print("Trying stores in other countries...", end=" ")
+            while len(songs) == 0 and len(countries):
+                cc = countries.pop()
+                print("[%s]" % cc, end=" ")
+                songs = iTunesFindSong(query, country=country)
+            print("")
+            if len(songs) > 0:
+                print(colorize("Found %d results in [%s] store" % (
+                    len(songs), cc), color=Color.yellowBG, enabled=args.color))
+                country = cc
+            else:
+                print("No results, try again or quit with [q]")
+                continue
 
         print('')
         print('[q]/[0] to exit [L] to change country (%s)' % country)

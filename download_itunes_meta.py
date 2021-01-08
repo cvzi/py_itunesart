@@ -11,10 +11,12 @@ import ctypes
 from fileutils import asciiString, getStuff, setStuff, getAlbumInfoString, getSongInfoString, getTrackInfoString, getBasicAlbumData
 from itunesapi import iTunesGetTracks, iTunesFindSong, iTunesFindAlbum
 
-__version__ = "1.6"
+__version__ = "1.7"
 
 _colorEnd = '\033[0m'
 
+try_countries = ["us", "ru", "fr", "jm", "jp", "ar", "br", "no", "de", "es"]
+country_default = "us"
 
 class Color:
     green = '\033[92m'
@@ -74,7 +76,7 @@ def main(args):
     else:
         print("++++Read-only Mode++++")
 
-    country = 'us'
+    country = country_default
 
     # Walk files
     mp3s = []
@@ -104,6 +106,7 @@ def main(args):
     print("")
     print(
         'Search album on iTunes        [q] to exit, [L] to change country (%s)' % country)
+
     while selectedAlbum is None:
         guess = guess.strip()
         if not guess:
@@ -128,8 +131,20 @@ def main(args):
 
         albums = iTunesFindAlbum(query, country=country)
         if len(albums) == 0:
-            print("No results, try again or quit with [q]")
-            continue
+            countries = try_countries[:]
+            print("Trying stores in other countries...", end=" ")
+            while len(albums) == 0 and len(countries):
+                cc = countries.pop()
+                print("[%s]" % cc, end=" ")
+                albums = iTunesFindAlbum(query, country=country)
+            print("")
+            if len(albums) > 0:
+                print(colorize("Found %d results in [%s] store" % (
+                    len(albums), cc), color=Color.yellowBG, enabled=args.color))
+                country = cc
+            else:
+                print("No results, try again or quit with [q]")
+                continue
 
         print('')
         print('[q]/[0] to exit [L] to change country (%s)' % country)
@@ -179,7 +194,7 @@ def main(args):
     if len(selectedTracks) != selectedAlbum['totalTracks']:
         cprint("!!! Expected %d tracks in album but iTunes API provided %d tracks" % (
             selectedAlbum['totalTracks'], len(selectedTracks)), Color.redBG, args.color)
-        countries = ["ru", "fr", "jm", "ar", "no", "de", "es"]
+        countries = try_countries[:]
         print("Trying stores in other countries...", end=" ")
         while len(selectedTracks) != selectedAlbum['totalTracks'] and len(countries):
             cc = countries.pop()

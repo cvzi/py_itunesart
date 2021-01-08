@@ -17,7 +17,7 @@ from mutagen.id3 import APIC
 
 from itunesapi import findAlbumArt
 
-__version__ = "1.6"
+__version__ = "1.7"
 
 
 class Gui(tk.Tk):

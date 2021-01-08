@@ -13,7 +13,7 @@ __all__ = [
     "getBasicTrackData",
     "getBasicAlbumData"]
 
-__version__ = "1.6"
+__version__ = "1.7"
 
 
 def asciiString(s):
