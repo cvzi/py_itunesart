@@ -8,6 +8,7 @@ Can be used from the command line or from [Mp3Tag](http://www.mp3tag.de)
 Requirements:
  * Python 3
  * [Mutagen](https://bitbucket.org/lazka/mutagen) python module `pip install mutagen`
+ * [Pillow](https://pypi.org/project/Pillow/)/PIL python module `pip install pillow` (only required for the GUI) 
 
 ![Animated screenshot of terminal](screenshots/screencapture_itunes_meta.gif)
 
@@ -52,5 +53,6 @@ To add it to the Mp3Tag context menu, do the following steps in Mp3Tag:
 
 # GUI
 tkinter GUI screenshot:
+r
 
 ![Artwork GUI](screenshots/gui.jpg)
