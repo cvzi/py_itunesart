@@ -12,7 +12,7 @@ import tkinter as tk
 import PIL.Image
 import PIL.ImageTk
 from mutagen.mp3 import MP3
-from mutagen.mp4 import MP4, MP4Cover
+from mutagen.mp4 import MP4, MP4Cover, AtomDataType
 from mutagen.id3 import APIC
 
 from itunesapi import findAlbumArt
@@ -23,7 +23,7 @@ __version__ = "1.7"
 class Gui(tk.Tk):
     _imageRefs = {}
 
-    def __init__(self, args, files):
+    def __init__(self, args, files, current_covers=None):
         super().__init__()
 
         self.args = args
@@ -39,9 +39,57 @@ class Gui(tk.Tk):
         self.autocloseinseconds = 3
 
         self._resultWidgets = []
+        self.current_images = []
 
         frame = tk.Frame(self)
+        tk.Label(frame, text="Current covers:").pack(side=tk.LEFT)
+        frame.pack(fill=tk.X)
+        row = tk.Frame(self)
+        if current_covers:
+            for img in current_covers:
+                desc = "Unknown format"
+                typestr = "Could not load image"
+                photoimage = None
 
+                if isinstance(img, MP4Cover):
+                    im = PIL.Image.open(io.BytesIO(img))
+                    size = im.size
+                    im.thumbnail(size=(150,150))
+                    photoimage = PIL.ImageTk.PhotoImage(im)
+                    self.current_images.append(photoimage)
+
+                    desc = str(AtomDataType(img.imageformat)).replace('AtomDataType.', '')
+                    if len(size) == 2:
+                        typestr = "%dx%d" % size
+                    else:
+                        typestr = str(size)
+
+                elif isinstance(img, APIC):
+                    im = PIL.Image.open(io.BytesIO(img.data))
+                    size = im.size
+                    im.thumbnail(size=(150,150))
+                    photoimage = PIL.ImageTk.PhotoImage(im)
+                    self.current_images.append(photoimage)
+
+                    desc = str(img.desc)
+
+                    if len(size) == 2:
+                        typestr = "%dx%d" % size
+                    else:
+                        typestr = str(size)
+                    typestr += "\n" + str(img.type).replace('PictureType.', '')
+
+                frame = tk.Frame(row)
+                frame.pack(padx=2, pady=2, side=tk.LEFT)
+                tk.Label(frame, image=photoimage).pack(fill=tk.X)
+                tk.Label(frame, text="%s\n%s" %(typestr, desc)).pack(fill=tk.X)
+
+        else:
+            tk.Label(row, text="None").pack()
+
+        row.pack(fill=tk.X)
+
+        frame = tk.Frame(self)
         tk.Label(frame, text='Query:').pack(padx=0, pady=2, side=tk.LEFT)
         self.entry = tk.Entry(frame, textvariable=tk.StringVar(""), width=40)
         self.entry.pack(padx=2, pady=2, side=tk.LEFT)
@@ -274,6 +322,7 @@ def main(args):
         mp3s = [os.path.abspath(args.filename), ]
 
     query = ""
+    current_covers = []
     if args.query:
         query = args.query
     else:
@@ -290,7 +339,9 @@ def main(args):
                 elif "TPE1" in audio and str(audio["TPE1"]):
                     query += " " + str(audio["TPE1"])
                 query = query.strip()
-            except e:
+
+                current_covers = audio.tags.getall("APIC")
+            except BaseException as e:
                 print("Could not read ID3 data:")
                 print(e)
         elif mp3s[0].lower().endswith('.m4a'):
@@ -305,7 +356,10 @@ def main(args):
                 elif "\xa9ART" in audio and audio["\xa9ART"] and audio["\xa9ART"][0]:
                     query += " " + str(audio["\xa9ART"][0])
                 query = query.strip()
-            except e:
+
+                if "covr" in audio and audio["covr"]:
+                    current_covers = audio["covr"]
+            except BaseException as e:
                 print("Could not read ID3 data:")
                 print(e)
         else:
@@ -313,7 +367,7 @@ def main(args):
 
     print("Query=%s" % query)
 
-    gui = Gui(args, files=mp3s)
+    gui = Gui(args, files=mp3s, current_covers=current_covers)
     gui.search(query=query)
     gui.mainloop()
 
