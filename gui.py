@@ -45,10 +45,12 @@ class Gui(tk.Tk):
         self.current_images_remove = []
 
         frame = tk.Frame(self)
-        tk.Label(frame, text="Current covers: (Click to remove)").pack(side=tk.LEFT)
+        tk.Label(frame, text="Current covers: (Click to remove)").pack(
+            side=tk.LEFT)
 
         self.check_remove_all = tk.BooleanVar()
-        tkk.Checkbutton(frame, text="Remove all", variable=self.check_remove_all,command=functools.partial(self.removeCover, None)).pack()
+        tkk.Checkbutton(frame, text="Remove all", variable=self.check_remove_all,
+                        command=functools.partial(self.removeCover, None)).pack()
 
         frame.pack(fill=tk.X)
         row = tk.Frame(self)
@@ -61,11 +63,12 @@ class Gui(tk.Tk):
                 if isinstance(img, MP4Cover):
                     im = PIL.Image.open(io.BytesIO(img))
                     size = im.size
-                    im.thumbnail(size=(150,150))
+                    im.thumbnail(size=(150, 150))
                     photoimage = PIL.ImageTk.PhotoImage(im)
                     self.current_images.append(photoimage)
 
-                    desc = str(AtomDataType(img.imageformat)).replace('AtomDataType.', '')
+                    desc = str(AtomDataType(img.imageformat)
+                               ).replace('AtomDataType.', '')
                     if len(size) == 2:
                         typestr = "%dx%d" % size
                     else:
@@ -74,7 +77,7 @@ class Gui(tk.Tk):
                 elif isinstance(img, APIC):
                     im = PIL.Image.open(io.BytesIO(img.data))
                     size = im.size
-                    im.thumbnail(size=(150,150))
+                    im.thumbnail(size=(150, 150))
                     photoimage = PIL.ImageTk.PhotoImage(im)
                     self.current_images.append(photoimage)
 
@@ -88,9 +91,11 @@ class Gui(tk.Tk):
 
                 frame = tk.Frame(row)
                 frame.pack(padx=2, pady=2, side=tk.LEFT)
-                imgbutton = tk.Button(frame, image=photoimage,command=functools.partial(self.removeCover, index))
+                imgbutton = tk.Button(
+                    frame, image=photoimage, command=functools.partial(self.removeCover, index))
                 imgbutton.pack(fill=tk.X)
-                tk.Label(frame, text="%s\n%s" %(typestr, desc)).pack(fill=tk.X)
+                tk.Label(frame, text="%s\n%s" %
+                         (typestr, desc)).pack(fill=tk.X)
                 self.current_images_widgets.append(imgbutton)
 
         else:
@@ -210,7 +215,8 @@ class Gui(tk.Tk):
                 self.check_remove_all.set(False)
             if removeIndex in self.current_images_remove:
                 self.current_images_remove.remove(removeIndex)
-                self.current_images_widgets[removeIndex].configure(bg='SystemButtonFace')
+                self.current_images_widgets[removeIndex].configure(
+                    bg='SystemButtonFace')
             else:
                 self.current_images_remove.append(removeIndex)
                 self.current_images_widgets[removeIndex].configure(bg='red')
@@ -287,7 +293,8 @@ class Gui(tk.Tk):
                     # remove images at specific indexes
                     allpics = audio.tags.getall("APIC")[:]
                     if len(self.current_images_widgets) != len(allpics):
-                        print("This file has different covers than the first file -> Cannot remove covers")
+                        print(
+                            "This file has different covers than the first file -> Cannot remove covers")
                         audio.tags.add(apic)
                     else:
                         audio.tags.delall("APIC")
@@ -320,7 +327,8 @@ class Gui(tk.Tk):
                     # remove images at specific indexes
                     allpics = audio["covr"][:]
                     if len(self.current_images_widgets) != len(allpics):
-                        print("This file has different covers than the first file -> Cannot remove covers")
+                        print(
+                            "This file has different covers than the first file -> Cannot remove covers")
                         audio.tags.add(apic)
                     else:
                         audio["covr"] = [mp4cover]
@@ -438,7 +446,8 @@ def main(args):
 
     print("Query=%s" % query)
 
-    gui = Gui(args, files=mp3s, current_covers=current_covers, check_remove_all=args.remove)
+    gui = Gui(args, files=mp3s, current_covers=current_covers,
+              check_remove_all=args.remove)
     gui.search(query=query)
     gui.mainloop()
 
