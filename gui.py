@@ -37,7 +37,7 @@ class Gui(tk.Tk):
 
         self.title("iTunes Art Downloader")
 
-        self.imageSize = 250
+        self.previewSize = 250
         self.downloadSize = 800
         self.autocloseinseconds = 3
 
@@ -145,6 +145,7 @@ class Gui(tk.Tk):
     def _loadImage(self, widget, url):
         raw_data = urllib.request.urlopen(url).read()
         im = PIL.Image.open(io.BytesIO(raw_data))
+        im.thumbnail(size=(self.imageSize, self.imageSize))
         Gui._imageRefs[url] = PIL.ImageTk.PhotoImage(im)
         widget.configure(image=Gui._imageRefs[url])
 
@@ -162,12 +163,23 @@ class Gui(tk.Tk):
             w.pack_forget()
         self._resultWidgets = []
 
-        itemsPerRow = int(self.winfo_screenwidth() / (self.imageSize + 10))
-        maxRows = int(self.winfo_screenheight() / (self.imageSize + 10))
+        self.imageSize = self.previewSize
 
         searchResults = iTunesFindAlbum(
             query, dimensions=(
                 self.imageSize, self.imageSize, 'bb'))
+
+        max_width = max(min(1200, self.winfo_screenwidth()), self.winfo_width())
+        max_height = max(min(800, self.winfo_screenheight()), self.winfo_height()) - 350
+
+        while True:
+            itemsPerRow = int(max_width / (self.imageSize + 10)) - 1
+            maxRows = int(max_height / (self.imageSize + 10))
+
+            if itemsPerRow * maxRows < len(searchResults):
+                self.imageSize -= 20
+            else:
+                break
 
         row = None
 
