@@ -43,13 +43,16 @@ def iTunesFindAlbum(search, dimensions=(600, 600, 'bb'), country="us"):
     results = []
 
     for item in data['results']:
+
         result = {
             "collectionId": item['collectionId'],
+            "artistId": item['artistId'],
             "artist": item['artistName'],
             "name": item['collectionName'],
             "genre": item['primaryGenreName'],
             "date": item['releaseDate'],
             "totalTracks": item['trackCount'],
+            "publisher": item['copyright'],
             "image": item['artworkUrl100'].replace(
                 "100x100bb.jpg",
                 "%dx%d%s.jpg" %
@@ -97,30 +100,16 @@ def iTunesGetTracks(collectionId, country="us"):
             result = {
                 "name": item["trackName"],
                 "track": item["trackNumber"],
-                "artist": item["artistName"]
+                "artist": item["artistName"],
+                "trackId": item["trackId"],
+                "disc" : item["discNumber"],
+                "totalDiscs" : item["discCount"],
             }
             results.append(result)
 
     results.sort(key=lambda v: v["track"])
 
     return results
-
-
-def findAlbumArt(search, dimensions=(600, 600, 'bb'), country="us"):
-    data = __getArt(search, "album", country)
-
-    results = []
-
-    for item in data['results']:
-        result = {}
-        result["artist"] = item['artistName']
-        result["name"] = item['collectionName']
-        result["image"] = item['artworkUrl100'].replace(
-            "100x100bb.jpg", "%dx%d%s.jpg" % dimensions)
-        results.append(result)
-
-    return results
-
 
 #
 # Below for testing only

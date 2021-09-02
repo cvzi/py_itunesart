@@ -8,6 +8,7 @@ import functools
 import io
 import os
 import time
+import re
 import tkinter as tk
 import tkinter.ttk as tkk
 import PIL.Image
@@ -16,7 +17,8 @@ from mutagen.mp3 import MP3
 from mutagen.mp4 import MP4, MP4Cover, AtomDataType
 from mutagen.id3 import APIC
 
-from itunesapi import findAlbumArt
+from itunesapi import iTunesFindAlbum, iTunesGetTracks
+from fileutils import setStuff
 
 __version__ = "1.7"
 
@@ -43,6 +45,17 @@ class Gui(tk.Tk):
         self.current_images = []
         self.current_images_widgets = []
         self.current_images_remove = []
+
+        frame = tk.Frame(self)
+        tk.Label(frame, text="Set general album information:").pack(
+            side=tk.LEFT)
+
+        self.check_set_album_info = tk.BooleanVar()
+        self.check_set_album_info.set(True)
+        tkk.Checkbutton(frame, text="Year, Genre, Album artist, ...",
+                        variable=self.check_set_album_info).pack()
+
+        frame.pack(fill=tk.X)
 
         frame = tk.Frame(self)
         tk.Label(frame, text="Current covers: (Click to remove)").pack(
@@ -152,7 +165,7 @@ class Gui(tk.Tk):
         itemsPerRow = int(self.winfo_screenwidth() / (self.imageSize + 10))
         maxRows = int(self.winfo_screenheight() / (self.imageSize + 10))
 
-        searchResults = findAlbumArt(
+        searchResults = iTunesFindAlbum(
             query, dimensions=(
                 self.imageSize, self.imageSize, 'bb'))
 
@@ -273,6 +286,7 @@ class Gui(tk.Tk):
 
         i = 0
         for filename in self.files:
+            trackNumber = None
             if filename.lower().endswith('.mp3'):
                 try:
                     audio = MP3(filename)
@@ -306,6 +320,13 @@ class Gui(tk.Tk):
                 else:
                     audio.tags.add(apic)
 
+                if "TRCK" in audio and audio["TRCK"]:
+                    try:
+                        m = re.search("\d+", str(audio["TRCK"]))
+                        trackNumber = int(m[0])
+                    except:
+                        pass
+
                 try:
                     audio.save()
                 except BaseException:
@@ -322,7 +343,7 @@ class Gui(tk.Tk):
                     imageformat=MP4Cover.FORMAT_JPEG)
 
                 if self.check_remove_all.get():
-                    audio["covr"] = mp4cover
+                    audio["covr"] = [mp4cover]
                 elif self.current_images_remove:
                     # remove images at specific indexes
                     allpics = audio["covr"][:]
@@ -337,7 +358,16 @@ class Gui(tk.Tk):
                                 audio["covr"].append(pic)
 
                 else:
-                    audio["covr"].append(mp4cover)
+                    if "covr" in audio:
+                        audio["covr"].append(mp4cover)
+                    else:
+                        audio["covr"] = [mp4cover]
+
+                if "trkn" in audio and len(audio["trkn"]) and len(audio["trkn"][0]):
+                    try:
+                        trackNumber = int(audio["trkn"][0][0])
+                    except:
+                        pass
 
                 try:
                     audio.save()
@@ -347,6 +377,48 @@ class Gui(tk.Tk):
             else:
                 print("Wrong file extension. Expected .mp3 or .m4a")
                 continue
+
+            # Set album infos
+            if self.check_set_album_info.get():
+                # find catalogId in track info
+                catalogId = None
+                disc = None
+                totalDiscs = None
+                if trackNumber:
+                    trackresults = iTunesGetTracks(
+                        collectionId=result['collectionId'])
+                    for trackresult in trackresults:
+                        if trackresult["track"] == trackNumber:
+                            catalogId = trackresult["trackId"]
+                            disc = trackresult["disc"]
+                            totalDiscs = trackresult["totalDiscs"]
+                            break
+
+                    if catalogId is None:
+                        print("no matching track found")
+                else:
+                    print("no track number found")
+
+                trackdata = {
+                    "albumArtist": result['artist'],
+                    "album":  result['name'],
+                    "totalTracks": result['totalTracks'],
+                    "date": result["date"],
+                    "genre": result["genre"],
+                    "publisher": result['publisher'],
+                    "itunesartistid": result['artistId'],
+                    "itunesalbumid": result['collectionId'],
+                    "itunescatalogid": catalogId,
+                    "disc": disc,
+                    "totalDiscs": totalDiscs
+                }
+                r = setStuff(
+                    filename=filename,
+                    write=True,
+                    clean=False,
+                    **trackdata)
+                if not r:
+                    print("Failed to set album metadata info")
 
             i += 1
 

@@ -1,6 +1,6 @@
 import string
 from mutagen.mp3 import MP3
-from mutagen.id3 import ID3, TPE1, TPE2, TPOS, TRCK, APIC, TDRC, TIT2, TCON, TALB
+from mutagen.id3 import ID3, TPE1, TPE2, TPOS, TRCK, APIC, TDRC, TIT2, TCON, TALB, TPUB, TCOP, TPOS, TXXX
 from mutagen.mp4 import MP4, MP4Cover
 
 __all__ = [
@@ -87,14 +87,24 @@ def setStuff(
         date=None,
         genre=None,
         artwork=False,
+        publisher=None,
+        itunescatalogid=None,
+        itunesartistid=None,
+        itunesalbumid=None,
+        disc=None,
+        totalDiscs=None,
         write=False,
         clean=False):
     if filename.endswith('.mp3'):
         return setStuff_mp3(filename, title, artist, albumArtist, album, track,
-                            totalTracks, date, genre, artwork, write, clean)
+                            totalTracks, date, genre, artwork, publisher,
+                            itunescatalogid, itunesartistid, itunesalbumid,
+                            disc, totalDiscs, write, clean)
     else:
         return setStuff_m4a(filename, title, artist, albumArtist, album, track,
-                            totalTracks, date, genre, artwork, write, clean)
+                            totalTracks, date, genre, artwork, publisher,
+                            itunescatalogid, itunesartistid, itunesalbumid,
+                            disc, totalDiscs, write, clean)
 
 
 def setStuff_mp3(
@@ -108,6 +118,12 @@ def setStuff_mp3(
         date=None,
         genre=None,
         artwork=False,
+        publisher=None,
+        itunescatalogid=None,
+        itunesartistid=None,
+        itunesalbumid=None,
+        disc=None,
+        totalDiscs=None,
         write=False,
         clean=False):
     try:
@@ -154,6 +170,15 @@ def setStuff_mp3(
     elif track is not None:
         audio["TRCK"] = TRCK(encoding=3, text="%02d" % int(track))
 
+    if totalTracks is not None:
+        audio["TXXX:totaltracks"] = TXXX(encoding=3, desc='totaltracks', text=[str(int(totalTracks))])
+
+    if disc is not None and totalDiscs is not None:
+        audio["TPOS"] = TPOS(encoding=3, text="%d/%d" % (int(disc), int(totalDiscs)))
+        audio["TXXX:totaldiscs"] = TXXX(encoding=3, desc='totaldiscs', text=[str(int(totalDiscs))])
+    elif disc is not None:
+        audio["TPOS"] = TPOS(encoding=3, text=str(int(disc)))
+
     if date is not None:
         audio["TDRC"] = TDRC(encoding=3, text=str(date)[0:4])
 
@@ -171,6 +196,19 @@ def setStuff_mp3(
                 data=artwork
             )
         )
+
+    if publisher is not None:
+        audio["TPUB"] = TPUB(encoding=3, text=publisher)
+        audio["TCOP"] = TCOP(encoding=3, text=publisher)
+
+    if itunescatalogid is not None:
+        audio["TXXX:itunescatalogid"] = TXXX(encoding=3, desc='itunescatalogid', text=[str(int(itunescatalogid))])
+
+    if itunesartistid is not None:
+        audio["TXXX:itunesartistid"] = TXXX(encoding=3, desc='itunesartistid', text=[str(int(itunesartistid))])
+
+    if itunesalbumid is not None:
+        audio["TXXX:itunesalbumid"] = TXXX(encoding=3, desc='itunesalbumid', text=[str(int(itunesalbumid))])
 
     if write:
         audio.save()
@@ -191,6 +229,12 @@ def setStuff_m4a(
         date=None,
         genre=None,
         artwork=False,
+        publisher=None,
+        itunescatalogid=None,
+        itunesartistid=None,
+        itunesalbumid=None,
+        disc=None,
+        totalDiscs=None,
         write=False,
         clean=False):
 
@@ -225,11 +269,17 @@ def setStuff_m4a(
 
     if track is not None and totalTracks is not None:
         audio["trkn"] = [(int(track), int(totalTracks))]
+    elif totalTracks is not None and len(audio["trkn"]) and len(audio["trkn"][0]):
+        audio["trkn"] = [(int(audio["trkn"][0][0]), int(totalTracks))]
 
     elif track is not None:
         audio["trkn"] = [(int(track),)]
 
-    # TODO use date instead of year
+    if disc is not None and totalDiscs is not None:
+        audio["disk"] = [(int(disc), int(totalDiscs))]
+    elif disc is not None:
+        audio["disk"] = [(int(disc),)]
+
     if date is not None:
         audio["\xa9day"] = [str(date)]
 
@@ -242,6 +292,18 @@ def setStuff_m4a(
             MP4Cover(
                 data=artwork,
                 imageformat=MP4Cover.FORMAT_JPEG)]
+
+    if publisher is not None:
+        audio["cprt"] = [str(publisher)]
+
+    if itunescatalogid is not None:
+        audio["cnID"] = [int(itunescatalogid)]
+
+    if itunesartistid is not None:
+        audio["atID"] = [int(itunesartistid)]
+
+    if itunesalbumid is not None:
+        audio["plID"] = [int(itunesalbumid)]
 
     if write:
         audio.save()
