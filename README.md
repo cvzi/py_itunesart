@@ -56,4 +56,4 @@ To add it to the Mp3Tag context menu, do the following steps in Mp3Tag:
 # GUI
 tkinter GUI screenshot:
 
-![Artwork GUI](screenshots/gui.jpg)
+![Artwork GUI](screenshots/gui_2021-09-03.png)
