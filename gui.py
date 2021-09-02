@@ -284,6 +284,8 @@ class Gui(tk.Tk):
             self.entry.insert(0, "Could not download artwork")
             return
 
+        iTunesGetTracksCache = {}
+
         i = 0
         for filename in self.files:
             trackNumber = None
@@ -385,8 +387,15 @@ class Gui(tk.Tk):
                 disc = None
                 totalDiscs = None
                 if trackNumber:
-                    trackresults = iTunesGetTracks(
-                        collectionId=result['collectionId'])
+
+                    if result['collectionId'] in iTunesGetTracksCache:
+                        trackresults = iTunesGetTracksCache[result['collectionId']]
+                    else:
+                        trackresults = iTunesGetTracks(
+                            collectionId=result['collectionId'])
+                        iTunesGetTracksCache[result['collectionId']
+                                             ] = trackresults
+
                     for trackresult in trackresults:
                         if trackresult["track"] == trackNumber:
                             catalogId = trackresult["trackId"]
