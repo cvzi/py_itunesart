@@ -8,7 +8,7 @@ from fileutils import asciiString, getStuff, setStuff, getSongInfoString, getBas
 from itunesapi import iTunesFindSong
 from download_itunes_meta import initColor, colorize, cprint, Color, highlightMatch, try_countries, country_default
 
-__version__ = "1.7"
+__version__ = "1.8"
 
 
 def main(args):

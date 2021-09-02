@@ -20,7 +20,7 @@ from mutagen.id3 import APIC
 from itunesapi import iTunesFindAlbum, iTunesGetTracks
 from fileutils import setStuff
 
-__version__ = "1.7"
+__version__ = "1.8"
 
 
 class Gui(tk.Tk):

@@ -11,7 +11,7 @@ import ctypes
 from fileutils import asciiString, getStuff, setStuff, getAlbumInfoString, getSongInfoString, getTrackInfoString, getBasicAlbumData
 from itunesapi import iTunesGetTracks, iTunesFindSong, iTunesFindAlbum
 
-__version__ = "1.7"
+__version__ = "1.8"
 
 _colorEnd = '\033[0m'
 
