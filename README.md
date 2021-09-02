@@ -40,6 +40,7 @@ To add it to the Mp3Tag context menu, do the following steps in Mp3Tag:
  * Enter the name that shall appear in the context menu
  * For path choose your python.exe
  * For parameter use: `C:\pathtofile\gui.py "%_path%"`
+ * Or use: `C:\pathtofile\gui.py -r "%_path%"` if you want to remove all existing coverart
  * Uncheck the "for all selected files" option
 
 ## Only cover from iTunes (Album/Folder)
@@ -48,6 +49,7 @@ To add it to the Mp3Tag context menu, do the following steps in Mp3Tag:
  * Enter the name that shall appear in the context menu
  * For path choose your python.exe
  * For parameter use: `C:\pathtofile\gui.py -a "%_path%"`
+ * Or use: `C:\pathtofile\gui.py -a -r "%_path%"` if you want to remove all existing coverart
  * Uncheck the "for all selected files" option
 
 
