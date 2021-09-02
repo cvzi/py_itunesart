@@ -9,6 +9,7 @@ import io
 import os
 import time
 import tkinter as tk
+import tkinter.ttk as tkk
 import PIL.Image
 import PIL.ImageTk
 from mutagen.mp3 import MP3
@@ -23,7 +24,7 @@ __version__ = "1.7"
 class Gui(tk.Tk):
     _imageRefs = {}
 
-    def __init__(self, args, files, current_covers=None):
+    def __init__(self, args, files, current_covers=None, check_remove_all=False):
         super().__init__()
 
         self.args = args
@@ -40,13 +41,19 @@ class Gui(tk.Tk):
 
         self._resultWidgets = []
         self.current_images = []
+        self.current_images_widgets = []
+        self.current_images_remove = []
 
         frame = tk.Frame(self)
-        tk.Label(frame, text="Current covers:").pack(side=tk.LEFT)
+        tk.Label(frame, text="Current covers: (Click to remove)").pack(side=tk.LEFT)
+
+        self.check_remove_all = tk.BooleanVar()
+        tkk.Checkbutton(frame, text="Remove all", variable=self.check_remove_all,command=functools.partial(self.removeCover, None)).pack()
+
         frame.pack(fill=tk.X)
         row = tk.Frame(self)
         if current_covers:
-            for img in current_covers:
+            for index, img in enumerate(current_covers):
                 desc = "Unknown format"
                 typestr = "Could not load image"
                 photoimage = None
@@ -81,8 +88,10 @@ class Gui(tk.Tk):
 
                 frame = tk.Frame(row)
                 frame.pack(padx=2, pady=2, side=tk.LEFT)
-                tk.Label(frame, image=photoimage).pack(fill=tk.X)
+                imgbutton = tk.Button(frame, image=photoimage,command=functools.partial(self.removeCover, index))
+                imgbutton.pack(fill=tk.X)
                 tk.Label(frame, text="%s\n%s" %(typestr, desc)).pack(fill=tk.X)
+                self.current_images_widgets.append(imgbutton)
 
         else:
             tk.Label(row, text="None").pack()
@@ -91,9 +100,9 @@ class Gui(tk.Tk):
 
         frame = tk.Frame(self)
         tk.Label(frame, text='Query:').pack(padx=0, pady=2, side=tk.LEFT)
-        self.entry = tk.Entry(frame, textvariable=tk.StringVar(""), width=40)
+        self.entry = tkk.Entry(frame, textvariable=tk.StringVar(""), width=40)
         self.entry.pack(padx=2, pady=2, side=tk.LEFT)
-        tk.Button(
+        tkk.Button(
             frame,
             text="Go",
             command=self.search).pack(
@@ -102,6 +111,10 @@ class Gui(tk.Tk):
             side=tk.LEFT)
 
         frame.pack(fill=tk.X)
+
+        if check_remove_all:
+            self.check_remove_all.set(True)
+            self.removeCover(None)
 
     def close(self, event=None):
         self.withdraw()
@@ -184,6 +197,30 @@ class Gui(tk.Tk):
                 t.daemon = True
                 t.start()
 
+    def removeCover(self, removeIndex=None):
+        if self.check_remove_all.get():
+            # Select all
+            for i, button in enumerate(self.current_images_widgets):
+                if i not in self.current_images_remove:
+                    self.current_images_remove.append(i)
+                    button.configure(bg='red')
+        if removeIndex is not None:
+            if self.check_remove_all.get():
+                # Uncheck "remove all"
+                self.check_remove_all.set(False)
+            if removeIndex in self.current_images_remove:
+                self.current_images_remove.remove(removeIndex)
+                self.current_images_widgets[removeIndex].configure(bg='SystemButtonFace')
+            else:
+                self.current_images_remove.append(removeIndex)
+                self.current_images_widgets[removeIndex].configure(bg='red')
+        elif not self.check_remove_all.get() and len(self.current_images_remove) == len(self.current_images_widgets):
+            # Unselect all if all were selected
+            for i, button in enumerate(self.current_images_widgets):
+                if i in self.current_images_remove:
+                    self.current_images_remove.remove(i)
+                    button.configure(bg='SystemButtonFace')
+
     def selectedImage(self, result):
         if not self.files:
             print("No files found")
@@ -236,15 +273,32 @@ class Gui(tk.Tk):
                 except BaseException:
                     print("Could not open file: %s" % str(filename))
                     continue
-                audio.tags.add(
-                    APIC(
-                        encoding=3,  # 3 is for utf-8
-                        mime='image/jpeg',  # image/jpeg or image/png
-                        type=3,  # 3 is for the cover image
-                        desc=u'',
-                        data=artwork
-                    )
+                apic = APIC(
+                    encoding=3,  # 3 is for utf-8
+                    mime='image/jpeg',  # image/jpeg or image/png
+                    type=3,  # 3 is for the cover image
+                    desc=u'',
+                    data=artwork
                 )
+
+                if self.check_remove_all.get():
+                    audio.tags.setall("APIC", [apic])
+                elif self.current_images_remove:
+                    # remove images at specific indexes
+                    allpics = audio.tags.getall("APIC")[:]
+                    if len(self.current_images_widgets) != len(allpics):
+                        print("This file has different covers than the first file -> Cannot remove covers")
+                        audio.tags.add(apic)
+                    else:
+                        audio.tags.delall("APIC")
+                        audio.tags.setall("APIC", [apic])
+                        for picindex, pic in enumerate(allpics):
+                            if picindex not in self.current_images_remove:
+                                audio.tags.add(pic)
+
+                else:
+                    audio.tags.add(apic)
+
                 try:
                     audio.save()
                 except BaseException:
@@ -256,10 +310,27 @@ class Gui(tk.Tk):
                 except BaseException:
                     print("Could not open file: %s" % str(filename))
                     continue
-                audio["covr"] = [
-                    MP4Cover(
-                        data=artwork,
-                        imageformat=MP4Cover.FORMAT_JPEG)]
+                mp4cover = MP4Cover(
+                    data=artwork,
+                    imageformat=MP4Cover.FORMAT_JPEG)
+
+                if self.check_remove_all.get():
+                    audio["covr"] = mp4cover
+                elif self.current_images_remove:
+                    # remove images at specific indexes
+                    allpics = audio["covr"][:]
+                    if len(self.current_images_widgets) != len(allpics):
+                        print("This file has different covers than the first file -> Cannot remove covers")
+                        audio.tags.add(apic)
+                    else:
+                        audio["covr"] = [mp4cover]
+                        for picindex, pic in enumerate(allpics):
+                            if picindex not in self.current_images_remove:
+                                audio["covr"].append(pic)
+
+                else:
+                    audio["covr"].append(mp4cover)
+
                 try:
                     audio.save()
                 except BaseException:
@@ -367,7 +438,7 @@ def main(args):
 
     print("Query=%s" % query)
 
-    gui = Gui(args, files=mp3s, current_covers=current_covers)
+    gui = Gui(args, files=mp3s, current_covers=current_covers, check_remove_all=args.remove)
     gui.search(query=query)
     gui.mainloop()
 
@@ -383,6 +454,14 @@ if __name__ == "__main__":
         const=True,
         default=False,
         help='Album mode, store cover in all files in this directory')
+
+    parser.add_argument(
+        '-r',
+        dest='remove',
+        action='store_const',
+        const=True,
+        default=False,
+        help='Tick "remove all" covers checkbox')
 
     parser.add_argument(
         '-q',
