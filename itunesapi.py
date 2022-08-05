@@ -50,7 +50,7 @@ def iTunesFindAlbum(search, dimensions=(600, 600, 'bb'), country="us"):
             "artist": item['artistName'],
             "name": item['collectionName'],
             "genre": item['primaryGenreName'],
-            "date": item['releaseDate'],
+            "date": item['releaseDate'] if 'releaseDate' in item else None,
             "totalTracks": item['trackCount'],
             "publisher": item['copyright'],
             "image": item['artworkUrl100'].replace(
@@ -78,7 +78,7 @@ def iTunesFindSong(search, dimensions=(600, 600, 'bb'), country="us"):
             "album": item['collectionName'],
             "albumArtist": item['collectionArtistName'] if 'collectionArtistName' in item else None,
             "genre": item['primaryGenreName'],
-            "date": item['releaseDate'],
+            "date": item['releaseDate'] if 'releaseDate' in item else None,
             "track": item['trackNumber'],
             "totalTracks": item['trackCount'],
             "image": item['artworkUrl100'].replace(
