@@ -52,7 +52,7 @@ def iTunesFindAlbum(search, dimensions=(600, 600, 'bb'), country="us"):
             "genre": item['primaryGenreName'],
             "date": item['releaseDate'] if 'releaseDate' in item else None,
             "totalTracks": item['trackCount'],
-            "publisher": item['copyright'],
+            "publisher": item['copyright'] if 'copyright' in item else None,
             "image": item['artworkUrl100'].replace(
                 "100x100bb.jpg",
                 "%dx%d%s.jpg" %
