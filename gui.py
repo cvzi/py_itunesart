@@ -118,7 +118,7 @@ class Gui(tk.Tk):
 
         frame = tk.Frame(self)
         tk.Label(frame, text='Query:').pack(padx=0, pady=2, side=tk.LEFT)
-        self.entry = tkk.Entry(frame, textvariable=tk.StringVar(""), width=40)
+        self.entry = tkk.Entry(frame, textvariable=tk.StringVar(value=""), width=40)
         self.entry.pack(padx=2, pady=2, side=tk.LEFT)
         tkk.Button(
             frame,
