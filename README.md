@@ -6,7 +6,7 @@ Metadata and album cover can be stored in mp3 metadata/id3 and in m4a metadata
 Can be used from the command line or from [Mp3Tag](http://www.mp3tag.de)
 
 Requirements:
- * Python 3
+ * Python 3 (tested with 3.11)
  * [Mutagen](https://bitbucket.org/lazka/mutagen) python module `pip install mutagen`
  * [Pillow](https://pypi.org/project/Pillow/)/PIL python module `pip install pillow` (only required for the GUI) 
 
