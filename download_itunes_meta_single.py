@@ -34,6 +34,14 @@ def main(args):
         songinfo = os.path.basename(mp3)
     trackdata = getBasicTrackData(oldmetadata)
 
+    # Use filename if trackdata is empty
+    if not trackdata['title'] and not trackdata['artist']:
+        filetitle = os.path.splitext(os.path.basename(mp3))[0]
+        if ' - ' in filetitle:
+            trackdata['artist'], trackdata['title'] = filetitle.split(' - ', 1)
+        elif '-' in filetitle:
+            trackdata['artist'], trackdata['title'] = filetitle.split('-', 1)
+
     selectedSong = None
     print("")
     print(
