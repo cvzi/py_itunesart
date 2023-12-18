@@ -336,7 +336,7 @@ class Gui(tk.Tk):
 
                 if "TRCK" in audio and audio["TRCK"]:
                     try:
-                        m = re.search("\d+", str(audio["TRCK"]))
+                        m = re.search(r"\d+", str(audio["TRCK"]))
                         trackNumber = int(m[0])
                     except:
                         pass
