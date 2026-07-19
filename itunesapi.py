@@ -13,7 +13,7 @@ __version__ = "1.8"
 
 def __getArt(search, entity, country):
     #url = 'http://ax.itunes.apple.com/WebObjects/MZStoreServices.woa/wa/wsSearch?term=%s&country=%s&entity=%s' % (urllib.parse.quote(search), urllib.parse.quote(country), urllib.parse.quote(entity))
-    url = 'https://itunes.apple.com/search?term=%s&country=%s&entity=%s' % (
+    url = 'https://itunes.apple.com/search?explicit=Yes&term=%s&country=%s&entity=%s' % (
         urllib.parse.quote(search), urllib.parse.quote(country), urllib.parse.quote(entity))
 
     with urllib.request.urlopen(url) as r:
@@ -63,6 +63,15 @@ def iTunesFindAlbum(search, dimensions=(600, 600, 'bb'), country="us"):
 
 
 def iTunesFindSong(search, dimensions=(600, 600, 'bb'), country="us"):
+    # If the search term is a collectionId (album id/song id) directly fetch the tracks
+    # Otherwise, search for songs
+    try:
+        collectionId = int(search)
+        tracks = iTunesGetTracks(collectionId, country=country)
+        return tracks
+    except ValueError:
+        pass
+
     data = __getArt(search, "song", country)
 
     results = []
@@ -90,7 +99,7 @@ def iTunesFindSong(search, dimensions=(600, 600, 'bb'), country="us"):
     return results
 
 
-def iTunesGetTracks(collectionId, country="us"):
+def iTunesGetTracks(collectionId, country="us", dimensions=(600, 600, 'bb')):
     data = __getTracks(collectionId, country=country)
 
     results = []
@@ -104,6 +113,16 @@ def iTunesGetTracks(collectionId, country="us"):
                 "trackId": item["trackId"],
                 "disc" : item["discNumber"],
                 "totalDiscs" : item["discCount"],
+                "collectionId": item["collectionId"],
+                "image": item['artworkUrl100'].replace(
+                    "100x100bb.jpg",
+                    "%dx%d%s.jpg" %
+                    dimensions),
+                "album": item['collectionName'],
+                "albumArtist": item['collectionArtistName'] if 'collectionArtistName' in item else None,
+                "genre": item['primaryGenreName'],
+                "date": item['releaseDate'] if 'releaseDate' in item else None,
+                "totalTracks": item['trackCount']
             }
             results.append(result)
 

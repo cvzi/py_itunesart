@@ -45,7 +45,8 @@ def main(args):
     selectedSong = None
     print("")
     print(
-        'Search song on iTunes        [q] to exit, [L] to change country (%s)' % country)
+        'Type a collection id to directly fetch tracks or\n'\
+        'Search a song on iTunes        [q] to exit, [L] to change country (%s)' % country)
     while selectedSong is None:
         guess = guess.strip()
         if not guess:
@@ -83,6 +84,7 @@ def main(args):
                 country = cc
             else:
                 print("No results, try again or quit with [q]")
+                print("Or try an id from https://music.apple.com/us/search?term=" + urllib.parse.quote(query))
                 continue
 
         print('')
@@ -114,6 +116,7 @@ def main(args):
         while True:
             val = input('Select your song: ')
             if val == 'q' or val == '0':
+                print("Or try an id from https://music.apple.com/us/search?term=" + urllib.parse.quote(query))
                 return
 
             elif val == 'L' or val == 'l':

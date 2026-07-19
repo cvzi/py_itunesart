@@ -327,8 +327,11 @@ def getAlbumInfoString_mp3(metadata, mp3s):
         guess = metadata["TPE2"]
         albuminfo = metadata["TPE2"]
     elif "TPE1" in metadata and metadata["TPE1"]:
-        guess = metadata["TPE1"]
-        albuminfo = metadata["TPE1"]
+        artist = str(metadata["TPE1"])
+        if artist.endswith(' - Topic'):
+            artist = artist[0:-len(' - Topic')]
+        guess = artist
+        albuminfo = artist
 
     if "TALB" in metadata and metadata["TALB"]:
         guess += " - %s" % metadata["TALB"]
@@ -391,8 +394,11 @@ def getSongInfoString_mp3(metadata):
     guess = ""
     albuminfo = ""
     if "TPE1" in metadata and metadata["TPE1"]:
-        guess = metadata["TPE1"]
-        albuminfo = metadata["TPE1"]
+        artist = str(metadata["TPE1"])
+        if artist.endswith(' - Topic'):
+            artist = artist[0:-len(' - Topic')]
+        guess = artist
+        albuminfo = artist
     elif "TPE2" in metadata and metadata["TPE2"]:
         guess = metadata["TPE2"]
         albuminfo = metadata["TPE2"]
